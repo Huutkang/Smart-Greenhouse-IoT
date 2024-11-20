@@ -28,6 +28,10 @@ Dự án này sẽ được mở rộng trong bài tập cuối kỳ với các 
 ### ESP32 → Thiết bị thực thi
 - ESP32 điều khiển bật/tắt đèn LED dựa trên dữ liệu cảm biến hoặc lệnh từ người dùng.
 
+Hệ thống được thiết kế với luồng thông tin như sau:
+
+![Sơ đồ khối hệ thống](./diagram.png)
+
 ## Đặt bài toán
 Việc điều chỉnh ánh sáng trong nhà kính là rất quan trọng để đảm bảo sự phát triển của cây trồng. Dự án giữa kỳ này tập trung vào việc tự động hóa điều khiển ánh sáng trong nhà kính, giúp tiết kiệm năng lượng và giảm công sức lao động.
 
