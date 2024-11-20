@@ -33,7 +33,7 @@ Dự án này xây dựng một hệ thống điều khiển thông minh cho nh�
 
 Hệ thống được thiết kế với luồng thông tin như sau:
 
-![Sơ đồ khối hệ thống](./sơ đồ.png)
+![Sơ đồ khối hệ thống](./diagram.png)
 
 ## Đặt bài toán
 Trong bối cảnh nhu cầu trồng rau hữu cơ ngày càng tăng, việc sử dụng nhà kính giúp tối ưu hóa việc trồng cây và bảo vệ cây trồng khỏi các yếu tố bên ngoài. Tuy nhiên, việc duy trì điều kiện môi trường lý tưởng trong nhà kính một cách thủ công rất tốn thời gian và công sức. Dự án này tự động hóa các quy trình như điều khiển ánh sáng, tưới nước và kiểm soát nhiệt độ trong nhà kính thông qua công nghệ IoT, giúp giảm thiểu công sức lao động và tiết kiệm tài nguyên.
