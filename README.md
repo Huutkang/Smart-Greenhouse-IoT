@@ -1,69 +1,61 @@
-# Smart Greenhouse IoT System
+
+# Smart Greenhouse IoT System - Midterm Project
 
 ## Mô tả dự án
-Dự án này xây dựng một hệ thống điều khiển thông minh cho nhà kính trồng cây, nhằm duy trì các yếu tố môi trường như ánh sáng, độ ẩm đất và nhiệt độ trong khoảng tối ưu. Hệ thống sử dụng **ESP32** làm vi điều khiển, các cảm biến môi trường để thu thập dữ liệu, và giao thức **MQTT** để trao đổi thông tin qua một broker online. Người dùng có thể theo dõi và điều khiển hệ thống từ xa thông qua giao diện **Node-RED Dashboard**.
+Đây là một dự án IoT giữa kỳ với mục tiêu xây dựng hệ thống điều khiển ánh sáng tự động trong nhà kính. Hệ thống sử dụng **ESP32**, cảm biến ánh sáng, và đèn LED để điều chỉnh ánh sáng phù hợp. Hệ thống giao tiếp qua giao thức **MQTT** và cung cấp giao diện điều khiển từ xa bằng **Node-RED Dashboard**.
+
+Dự án này sẽ được mở rộng trong bài tập cuối kỳ với các tính năng điều khiển môi trường toàn diện hơn. Chi tiết về dự án cuối kỳ có thể được tìm thấy ở file `README.md` trong nhánh `final`.
 
 ## Tính năng chính
-- **Điều khiển ánh sáng:** Dựa vào cảm biến ánh sáng, hệ thống tự động điều chỉnh đèn LED để cung cấp đủ ánh sáng cho cây trồng.
-- **Tưới nước tự động:** Khi độ ẩm đất thấp, máy bơm nước sẽ tự động bật để tưới cây.
-- **Quản lý nhiệt độ:** Cảm biến nhiệt độ giúp điều chỉnh quạt làm mát khi nhiệt độ trong nhà kính quá cao.
-- **Giao diện điều khiển từ xa:** Người dùng theo dõi thông số môi trường và điều khiển các thiết bị thực thi qua một giao diện web hoặc ứng dụng smartphone sử dụng Node-RED.
+- **Điều khiển ánh sáng tự động:** Hệ thống tự động điều chỉnh đèn LED dựa trên dữ liệu từ cảm biến ánh sáng.
+- **Giao diện điều khiển từ xa:** Người dùng có thể theo dõi và điều khiển trạng thái đèn LED thông qua giao diện **Node-RED Dashboard**.
+- **Giao tiếp qua MQTT:** Hệ thống sử dụng giao thức MQTT để trao đổi dữ liệu giữa ESP32 và Node-RED.
 
 ## Sơ đồ khối hệ thống
-### Cảm biến → ESP32
-- Thu thập dữ liệu từ các cảm biến môi trường (ánh sáng, độ ẩm đất, nhiệt độ).
-- ESP32 xử lý dữ liệu và kiểm tra các ngưỡng cài đặt để quyết định tự động điều khiển thiết bị.
+### Cảm biến ánh sáng → ESP32
+- Thu thập dữ liệu từ cảm biến ánh sáng.
+- ESP32 xử lý dữ liệu và quyết định bật/tắt đèn LED.
 
 ### ESP32 → MQTT Broker
-- Gửi dữ liệu cảm biến (thông tin ánh sáng, độ ẩm đất, nhiệt độ) tới MQTT Broker.
+- Gửi dữ liệu cảm biến ánh sáng và trạng thái đèn LED tới MQTT Broker.
 
 ### MQTT Broker → Node-RED Dashboard
-- Node-RED Dashboard nhận dữ liệu từ MQTT Broker và hiển thị các thông số môi trường cho người dùng.
+- Node-RED Dashboard nhận dữ liệu từ MQTT Broker để hiển thị trạng thái ánh sáng và trạng thái đèn.
 
 ### Node-RED Dashboard → MQTT Broker → ESP32
-- Người dùng điều khiển thiết bị thực thi thủ công từ giao diện (ví dụ: bật/tắt đèn LED, bơm nước, quạt).
-- Lệnh được truyền từ Node-RED Dashboard tới ESP32 thông qua MQTT Broker.
+- Người dùng gửi lệnh điều khiển từ giao diện Node-RED tới ESP32 thông qua MQTT Broker.
 
 ### ESP32 → Thiết bị thực thi
-- ESP32 nhận lệnh điều khiển từ người dùng hoặc từ các cảm biến để điều chỉnh thiết bị thực thi (đèn LED, máy bơm nước, quạt làm mát).
-
-### ESP32 → MQTT Broker → Node-RED Dashboard
-- ESP32 gửi trạng thái của thiết bị (bật/tắt) ngược lại MQTT Broker.
-- Node-RED Dashboard cập nhật trạng thái thiết bị để người dùng theo dõi.
-
-Hệ thống được thiết kế với luồng thông tin như sau:
-
-![Sơ đồ khối hệ thống](./diagram.png)
+- ESP32 điều khiển bật/tắt đèn LED dựa trên dữ liệu cảm biến hoặc lệnh từ người dùng.
 
 ## Đặt bài toán
-Trong bối cảnh nhu cầu trồng rau hữu cơ ngày càng tăng, việc sử dụng nhà kính giúp tối ưu hóa việc trồng cây và bảo vệ cây trồng khỏi các yếu tố bên ngoài. Tuy nhiên, việc duy trì điều kiện môi trường lý tưởng trong nhà kính một cách thủ công rất tốn thời gian và công sức. Dự án này tự động hóa các quy trình như điều khiển ánh sáng, tưới nước và kiểm soát nhiệt độ trong nhà kính thông qua công nghệ IoT, giúp giảm thiểu công sức lao động và tiết kiệm tài nguyên.
+Việc điều chỉnh ánh sáng trong nhà kính là rất quan trọng để đảm bảo sự phát triển của cây trồng. Dự án giữa kỳ này tập trung vào việc tự động hóa điều khiển ánh sáng trong nhà kính, giúp tiết kiệm năng lượng và giảm công sức lao động.
 
 ## Các bước triển khai
 
 ### 1. Kết nối phần cứng
-- Đấu nối các cảm biến ánh sáng, độ ẩm đất, và nhiệt độ với ESP32.
-- Kết nối máy bơm, quạt và đèn LED qua các module relay.
+- Đấu nối cảm biến ánh sáng và đèn LED với ESP32 qua module relay.
 
 ### 2. Cài đặt phần mềm
-- Lập trình ESP32 bằng **PlatformIO** với giao thức **MQTT** để thu thập dữ liệu từ cảm biến và gửi qua MQTT Broker.
-- Cài đặt Node-RED để thiết kế giao diện điều khiển và theo dõi.
+- Lập trình ESP32 bằng **PlatformIO** để thu thập dữ liệu từ cảm biến và gửi dữ liệu qua **MQTT Broker**.
+- Cài đặt **Node-RED** để thiết kế giao diện điều khiển và hiển thị thông tin.
 
 ### 3. Cài đặt giao thức MQTT
-- Sử dụng một broker MQTT để truyền tải dữ liệu giữa ESP32 và Node-RED.
+- Sử dụng một broker MQTT (online hoặc local) để truyền tải dữ liệu giữa ESP32 và Node-RED.
 
 ### 4. Thiết kế giao diện trên Node-RED
-- Tạo các widget trên Dashboard để hiển thị dữ liệu cảm biến (độ sáng, độ ẩm đất, nhiệt độ) và các điều khiển cho đèn LED, máy bơm, quạt.
+- Tạo các widget trên Dashboard để hiển thị trạng thái cảm biến ánh sáng và điều khiển đèn LED.
 
 ### 5. Kiểm tra và hoàn thiện hệ thống
-- Đảm bảo hệ thống hoạt động ổn định, các thông số được điều khiển và theo dõi chính xác.
+- Đảm bảo dữ liệu được truyền tải ổn định qua MQTT, và giao diện Node-RED Dashboard hoạt động đúng chức năng.
 
 ## Kết quả dự kiến
-- Giao diện **Node-RED** hiển thị thông tin từ các cảm biến (độ sáng, độ ẩm đất, nhiệt độ) và cho phép điều khiển các thiết bị (đèn LED, máy bơm, quạt).
-- Tự động điều chỉnh các yếu tố môi trường trong nhà kính (ánh sáng, độ ẩm, nhiệt độ) dựa trên ngưỡng cài đặt trước.
-- Giao diện điều khiển dễ sử dụng trên cả máy tính và smartphone.
+- Giao diện **Node-RED** hiển thị dữ liệu cảm biến ánh sáng và trạng thái đèn LED.
+- Tự động điều chỉnh đèn LED dựa trên ánh sáng môi trường.
+- Giao diện điều khiển đơn giản, dễ sử dụng trên máy tính và smartphone.
 
 ## Yêu cầu hệ thống
-- **Phần cứng:** ESP32, cảm biến ánh sáng, cảm biến độ ẩm, nhiệt độ, relay module, đèn LED, máy bơm nước, quạt.
+- **Phần cứng:** ESP32, cảm biến ánh sáng, relay module, đèn LED.
 - **Phần mềm:** PlatformIO, Node-RED, MQTT Broker.
 
 ## Hướng dẫn sử dụng
