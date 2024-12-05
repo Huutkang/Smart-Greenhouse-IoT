@@ -1,67 +1,107 @@
 
-# Smart Greenhouse IoT System - Midterm Project
+# **Greenhouse Monitoring and Control System**
 
-## Mô tả dự án
-Đây là một dự án IoT giữa kỳ với mục tiêu xây dựng hệ thống điều khiển ánh sáng tự động trong nhà kính. Hệ thống sử dụng **ESP32**, cảm biến ánh sáng, và đèn LED để điều chỉnh ánh sáng phù hợp. Hệ thống giao tiếp qua giao thức **MQTT** và cung cấp giao diện điều khiển từ xa bằng **Node-RED Dashboard**.
+## **Giới thiệu**
+Dự án này là một hệ thống giám sát và điều khiển ánh sáng trong nhà kính thông qua cảm biến ánh sáng (quang trở) và MQTT. 
+Hệ thống hỗ trợ hai chế độ điều khiển:
+1. **Chế độ thủ công (Manual):** Người dùng bật/tắt đèn qua Node-RED Dashboard.
+2. **Chế độ tự động (Auto):** Đèn sẽ tự động bật/tắt dựa trên độ sáng môi trường.
 
-Dự án này sẽ được mở rộng trong bài tập cuối kỳ với các tính năng điều khiển môi trường toàn diện hơn. Chi tiết về dự án cuối kỳ có thể được tìm thấy ở file `README.md` trong nhánh `final`.
-
-## Tính năng chính
-- **Điều khiển ánh sáng tự động:** Hệ thống tự động điều chỉnh đèn LED dựa trên dữ liệu từ cảm biến ánh sáng.
-- **Giao diện điều khiển từ xa:** Người dùng có thể theo dõi và điều khiển trạng thái đèn LED thông qua giao diện **Node-RED Dashboard**.
-- **Giao tiếp qua MQTT:** Hệ thống sử dụng giao thức MQTT để trao đổi dữ liệu giữa ESP32 và Node-RED.
-
-## Sơ đồ khối hệ thống
-### Cảm biến ánh sáng → ESP32
-- Thu thập dữ liệu từ cảm biến ánh sáng.
-- ESP32 xử lý dữ liệu và quyết định bật/tắt đèn LED.
-
-### ESP32 → MQTT Broker
-- Gửi dữ liệu cảm biến ánh sáng và trạng thái đèn LED tới MQTT Broker.
-
-### MQTT Broker → Node-RED Dashboard
-- Node-RED Dashboard nhận dữ liệu từ MQTT Broker để hiển thị trạng thái ánh sáng và trạng thái đèn.
-
-### Node-RED Dashboard → MQTT Broker → ESP32
-- Người dùng gửi lệnh điều khiển từ giao diện Node-RED tới ESP32 thông qua MQTT Broker.
-
-### ESP32 → Thiết bị thực thi
-- ESP32 điều khiển bật/tắt đèn LED dựa trên dữ liệu cảm biến hoặc lệnh từ người dùng.
-
-## Đặt bài toán
-Việc điều chỉnh ánh sáng trong nhà kính là rất quan trọng để đảm bảo sự phát triển của cây trồng. Dự án giữa kỳ này tập trung vào việc tự động hóa điều khiển ánh sáng trong nhà kính, giúp tiết kiệm năng lượng và giảm công sức lao động.
-
-## Các bước triển khai
-
-### 1. Kết nối phần cứng
-- Đấu nối cảm biến ánh sáng và đèn LED với ESP32 qua module relay.
-
-### 2. Cài đặt phần mềm
-- Lập trình ESP32 bằng **PlatformIO** để thu thập dữ liệu từ cảm biến và gửi dữ liệu qua **MQTT Broker**.
-- Cài đặt **Node-RED** để thiết kế giao diện điều khiển và hiển thị thông tin.
-
-### 3. Cài đặt giao thức MQTT
-- Sử dụng một broker MQTT (online hoặc local) để truyền tải dữ liệu giữa ESP32 và Node-RED.
-
-### 4. Thiết kế giao diện trên Node-RED
-- Tạo các widget trên Dashboard để hiển thị trạng thái cảm biến ánh sáng và điều khiển đèn LED.
-
-### 5. Kiểm tra và hoàn thiện hệ thống
-- Đảm bảo dữ liệu được truyền tải ổn định qua MQTT, và giao diện Node-RED Dashboard hoạt động đúng chức năng.
-
-## Kết quả dự kiến
-- Giao diện **Node-RED** hiển thị dữ liệu cảm biến ánh sáng và trạng thái đèn LED.
-- Tự động điều chỉnh đèn LED dựa trên ánh sáng môi trường.
-- Giao diện điều khiển đơn giản, dễ sử dụng trên máy tính và smartphone.
-
-## Yêu cầu hệ thống
-- **Phần cứng:** ESP32, cảm biến ánh sáng, relay module, đèn LED.
-- **Phần mềm:** PlatformIO, Node-RED, MQTT Broker.
-
-## Hướng dẫn sử dụng
-1. Kết nối các phần cứng theo sơ đồ.
-2. Tải chương trình lên ESP32.
-3. Thiết lập broker MQTT và giao diện Node-RED.
-4. Theo dõi và điều khiển hệ thống thông qua Node-RED Dashboard.
+Dữ liệu cảm biến và trạng thái hệ thống được truyền và nhận thông qua MQTT Broker bảo mật (TLS) bằng HiveMQ Cloud.
 
 ---
+
+## **Phần cứng**
+1. **Vi điều khiển:** ESP32.
+2. **Cảm biến ánh sáng:** Quang trở (kết nối qua chân ADC, pin 35 trên ESP32).
+3. **Relay module:** Điều khiển đèn (pin 19 trên ESP32).
+4. **Mạch điện trở phân áp:** Để đo độ sáng chính xác từ cảm biến.
+5. **Nguồn điện:** 3.3V và 5V cho các module.
+
+---
+
+## **Phần mềm**
+1. **Node-RED:** Xây dựng giao diện và xử lý dữ liệu.
+2. **HiveMQ Broker:** MQTT Broker hỗ trợ giao thức bảo mật TLS.
+3. **PlatformIO:** Viết chương trình cho ESP32.
+
+---
+
+## **Chức năng**
+### **ESP32**
+1. **Gửi dữ liệu cảm biến:**
+   - Đọc giá trị độ sáng từ cảm biến và gửi qua topic `greenhouse/light`.
+2. **Điều khiển đèn:**
+   - Nhận lệnh từ topic `greenhouse/control`:
+     - **"ON":** Bật đèn (chế độ thủ công).
+     - **"OFF":** Tắt đèn (chế độ thủ công).
+     - **"AUTO":** Kích hoạt chế độ tự động.
+
+3. **Chứng chỉ bảo mật (TLS):**
+   - ESP32 sử dụng chứng chỉ Root CA để kết nối bảo mật với HiveMQ Cloud.
+
+### **Node-RED Dashboard**
+1. **Hiển thị dữ liệu:**
+   - Đồ thị hiển thị độ sáng theo thời gian (`greenhouse/light`).
+   - Giá trị độ sáng tức thời.
+2. **Điều khiển:**
+   - Chuyển chế độ giữa **Tự động**, **Bật đèn**, và **Tắt đèn** qua topic `greenhouse/control`.
+
+---
+
+## **Cài đặt**
+### **1. Thiết lập ESP32**
+1. Cài đặt thư viện cần thiết:
+   - [WiFi](https://platformio.org/lib/show/870/WiFi)
+   - [PubSubClient](https://platformio.org/lib/show/89/PubSubClient)
+2. Sử dụng file code Arduino như trên (`main.cpp`) và biên dịch trên **PlatformIO**.
+3. Sửa thông tin mạng WiFi, MQTT Broker và chứng chỉ trong file.
+
+### **2. Node-RED**
+1. Cài đặt Node-RED trên máy tính hoặc server.
+2. Cài đặt Dashboard UI:
+   ```bash
+   npm install node-red-dashboard
+   ```
+3. Import Flow:
+   - Dựa trên hình ảnh, cấu trúc flow bao gồm:
+     - Topic `greenhouse/light`: Hiển thị dữ liệu độ sáng.
+     - Topic `greenhouse/control`: Điều khiển hệ thống.
+
+---
+
+## **Cách sử dụng**
+1. **Kết nối phần cứng**:
+   - Đảm bảo ESP32 đã kết nối với cảm biến ánh sáng và module relay.
+2. **Chạy ESP32**:
+   - Nạp mã nguồn và kết nối với MQTT Broker.
+3. **Mở Node-RED Dashboard**:
+   - Truy cập tại [http://127.0.0.1:1880/ui](http://127.0.0.1:1880/ui).
+4. **Giám sát và điều khiển:**
+   - Xem đồ thị độ sáng.
+   - Chọn chế độ **Tự động**, **Bật đèn**, hoặc **Tắt đèn** để điều khiển relay.
+
+---
+
+## **Cấu trúc MQTT Topics**
+- **`greenhouse/light`:**
+  - ESP32 gửi dữ liệu độ sáng hiện tại (Lux).
+- **`greenhouse/control`:**
+  - Node-RED gửi lệnh điều khiển:
+    - `"ON"`: Bật đèn.
+    - `"OFF"`: Tắt đèn.
+    - `"AUTO"`: Chuyển chế độ tự động.
+
+---
+
+## **Hình ảnh và Video Demo**
+- **Ảnh giao diện Node-RED Dashboard:** 
+  - `images/node-red-1.png`
+  - `images/node-red-2.png`
+- **Video demo hệ thống:** 
+  - `video/demo.mp4`
+
+
+---
+
+Em sẽ hoàn thiện đề tài trong bài cuối kì.
