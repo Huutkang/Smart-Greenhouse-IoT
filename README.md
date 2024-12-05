@@ -96,10 +96,10 @@ Dữ liệu cảm biến và trạng thái hệ thống được truyền và nh
 
 ## **Hình ảnh và Video Demo**
 - **Ảnh giao diện Node-RED Dashboard:** 
-  - `images/node-red-1.png`
-  - `images/node-red-2.png`
+  ![node-red-1](images/node-red-1.png)
+  ![node-red-2](images/node-red-2.png)
 - **Video demo hệ thống:** 
-  - `video/demo.mp4`
+  ![video demo](video/demo.mp4)
 
 
 ---
