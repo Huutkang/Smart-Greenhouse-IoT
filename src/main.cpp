@@ -1,166 +1,141 @@
-#include <WiFi.h>
-#include <PubSubClient.h>
-#include <WiFiClientSecure.h>
+#include <Arduino.h>
+#include "wifi_mqtt.h"
+#include "sensor.h"
+#include "irrigation.h"
+#include "time_sync.h"
 
-// Cấu hình WiFi
-const char* ssid = "XIAOXIN-PRO-14";
-const char* password = "09032002";
 
-// Cấu hình HiveMQ Broker
-const char* mqtt_server = "da515a6f948a482bb656f7310841d60d.s1.eu.hivemq.cloud";
-const int mqtt_port = 8883;
-const char* mqtt_user = "huuthang";
-const char* mqtt_pass = "123456";
+// Đã được định nghĩa trong thư viện, không cần định nghĩa lại
+// const int SCL = 22; // esp32: D22, esp8288: D1
+// const int SDA = 21; // esp32: D21, esp8288: D2
 
-// Chủ đề MQTT
-const char* light_topic = "greenhouse/light";
-const char* control_topic = "greenhouse/control";
+// Relay1. esp32: D32, esp8266: D4
+// Relay2. esp32: D33, esp8266: D5
+// Relay3. esp32: D26, esp8266: D6
+// Relay4. esp32: D25, esp8266: D7
 
-// Chứng chỉ Root CA
-const char* ca_cert = R"~~~(
------BEGIN CERTIFICATE-----
-MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw
-TzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh
-cmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwHhcNMTUwNjA0MTEwNDM4
-WhcNMzUwNjA0MTEwNDM4WjBPMQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJu
-ZXQgU2VjdXJpdHkgUmVzZWFyY2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBY
-MTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAK3oJHP0FDfzm54rVygc
-h77ct984kIxuPOZXoHj3dcKi/vVqbvYATyjb3miGbESTtrFj/RQSa78f0uoxmyF+
-0TM8ukj13Xnfs7j/EvEhmkvBioZxaUpmZmyPfjxwv60pIgbz5MDmgK7iS4+3mX6U
-A5/TR5d8mUgjU+g4rk8Kb4Mu0UlXjIB0ttov0DiNewNwIRt18jA8+o+u3dpjq+sW
-T8KOEUt+zwvo/7V3LvSye0rgTBIlDHCNAymg4VMk7BPZ7hm/ELNKjD+Jo2FR3qyH
-B5T0Y3HsLuJvW5iB4YlcNHlsdu87kGJ55tukmi8mxdAQ4Q7e2RCOFvu396j3x+UC
-B5iPNgiV5+I3lg02dZ77DnKxHZu8A/lJBdiB3QW0KtZB6awBdpUKD9jf1b0SHzUv
-KBds0pjBqAlkd25HN7rOrFleaJ1/ctaJxQZBKT5ZPt0m9STJEadao0xAH0ahmbWn
-OlFuhjuefXKnEgV4We0+UXgVCwOPjdAvBbI+e0ocS3MFEvzG6uBQE3xDk3SzynTn
-jh8BCNAw1FtxNrQHusEwMFxIt4I7mKZ9YIqioymCzLq9gwQbooMDQaHWBfEbwrbw
-qHyGO0aoSCqI3Haadr8faqU9GY/rOPNk3sgrDQoo//fb4hVC1CLQJ13hef4Y53CI
-rU7m2Ys6xt0nUW7/vGT1M0NPAgMBAAGjQjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNV
-HRMBAf8EBTADAQH/MB0GA1UdDgQWBBR5tFnme7bl5AFzgAiIyBpY9umbbjANBgkq
-hkiG9w0BAQsFAAOCAgEAVR9YqbyyqFDQDLHYGmkgJykIrGF1XIpu+ILlaS/V9lZL
-ubhzEFnTIZd+50xx+7LSYK05qAvqFyFWhfFQDlnrzuBZ6brJFe+GnY+EgPbk6ZGQ
-3BebYhtF8GaV0nxvwuo77x/Py9auJ/GpsMiu/X1+mvoiBOv/2X/qkSsisRcOj/KK
-NFtY2PwByVS5uCbMiogziUwthDyC3+6WVwW6LLv3xLfHTjuCvjHIInNzktHCgKQ5
-ORAzI4JMPJ+GslWYHb4phowim57iaztXOoJwTdwJx4nLCgdNbOhdjsnvzqvHu7Ur
-TkXWStAmzOVyyghqpZXjFaH3pO3JLF+l+/+sKAIuvtd7u+Nxe5AW0wdeRlN8NwdC
-jNPElpzVmbUq4JUagEiuTDkHzsxHpFKVK7q4+63SM1N95R1NbdWhscdCb+ZAJzVc
-oyi3B43njTOQ5yOf+1CceWxG1bQVs5ZufpsMljq4Ui0/1lvh+wjChP4kqKOJ2qxq
-4RgqsahDYVvTH9w7jXbyLeiNdd8XM2w9U/t7y0Ff/9yi0GE44Za4rF2LN9d11TPA
-mRGunUHBcnWEvgJBQl9nJEiU0Zsnvgc/ubhPgXRR4Xq37Z0j4r7g1SgEEzwxA57d
-emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
------END CERTIFICATE-----
-)~~~";
+int RL[4] = {D4, D5, D6, D7};
 
-// Khai báo đối tượng WiFiClientSecure và PubSubClient
-WiFiClientSecure espClient;
-PubSubClient client(espClient);
+unsigned long current_time;
+unsigned long time1=0;
+unsigned long time2=0;
+unsigned long time3=0;
+unsigned long time4=0;
+unsigned long time5=0;
 
-// Cấu hình pin
-const int relayPin = 19;
-const int lightSensorPin = 35;
+int t[4] = {max_time[0], max_time[1], max_time[2], max_time[3]};
+int ActivationTime = 60;
+bool count_status[4] = {false, false, false, false};
 
-// Biến trạng thái
-enum Mode { MANUAL, AUTO };
-Mode currentMode = AUTO;
-bool manualState = HIGH;
 
-// Cấu hình cảm biến
-const float Vref = 3.3; // Điện áp tham chiếu
-const float RL = 1000; // Điện trở cố định trong mạch phân áp
-
-void setup_wifi() {
-    delay(10);
-    Serial.print("Connecting to WiFi...");
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.print(".");
+// với kiểu dữ liệu unsigned long: 10 - 4294967295 = 11 nên không lo tràn số ở hàm millis nhé
+int Timer(unsigned long *time, int wait){
+    current_time = millis();
+    if (current_time-*time>wait){
+        *time = current_time;
+        return 1;
     }
-    Serial.println("\nWiFi connected");
+    else{
+        return 0;
+    }
 }
 
-// Hàm callback khi nhận dữ liệu từ MQTT
-void callback(char* topic, byte* payload, unsigned int length) {
-    String message = "";
-    for (int i = 0; i < length; i++) {
-        message += (char)payload[i];
-    }
-
-    if (String(topic) == control_topic) {
-        if (message == "ON") {
-            currentMode = MANUAL;
-            manualState = LOW;
-            digitalWrite(relayPin, LOW);
-        } else if (message == "OFF") {
-            currentMode = MANUAL;
-            manualState = HIGH;
-            digitalWrite(relayPin, HIGH);
-        } else if (message == "AUTO") {
-            currentMode = AUTO;
+void updateStatus() {
+    for (int i = 0; i < 4; i++) {
+        if (!isAuto[i]) {
+            // Nếu không ở chế độ tự động, bỏ qua máy bơm này
+            continue;
         }
-    }
-}
+        if (t[i]<0){
+            status[i] = false;
+        }
 
-// Hàm reconnect để kết nối lại với MQTT nếu bị mất kết nối
-void reconnect() {
-    while (!client.connected()) {
-        Serial.print("Attempting MQTT connection...");
-        if (client.connect("ESP32Client", mqtt_user, mqtt_pass)) {
-            Serial.println("connected");
-            client.subscribe(control_topic);
+        if (sensor[i] <= min_moisture[i]) {
+            if (!count_status[i]){
+                count_status[i] = true;
+                status[i] = true;
+            }
+        } else if (sensor[i] >= max_moisture[i]) {
+            status[i] = false; // Không tưới
         } else {
-            Serial.print("failed, rc=");
-            Serial.println(client.state());
-            delay(5000);
+            // Độ ẩm nằm trong khoảng 60-90
+            if (watering_timer[i]) {
+                if (!count_status[i]){
+                    count_status[i] = true;
+                    status[i] = true;
+                }
+                watering_timer[i] = false; // Reset lại bộ hẹn giờ
+            }
         }
     }
 }
 
-float readLux() {
-    int adcValue = analogRead(lightSensorPin);
-    float voltage = (adcValue * Vref) / 4095.0;
-    // một cách đổi nào đó từ hiệu điện thế sang thang đo độ sáng
-    return 2000*voltage; // Tạm tính, cần điều chỉnh theo datasheet
-}
 
 void setup() {
     Serial.begin(115200);
-    pinMode(relayPin, OUTPUT);
-    digitalWrite(relayPin, HIGH);
+    setupIrrigation(RL);          // Cấu hình hệ thống tưới cây
+    initializeTimers();
+    setupWiFi();                  // Cấu hình WiFi
+    setupMQTT();                 // Cấu hình MQTT
+    setupSensors();       // Cấu hình cảm biến (ADC: ADS1115)
+    setupTimeSync();
 
-    // Thiết lập WiFi
-    setup_wifi();
-
-    // Thiết lập chứng chỉ CA
-    espClient.setCACert(ca_cert);
-
-    // Thiết lập kết nối MQTT
-    client.setServer(mqtt_server, mqtt_port);
-    client.setCallback(callback);
-    Serial.begin(115200);
+    // Ví dụ: Đặt hẹn giờ cho máy bơm 0 vào lúc 08:00:00
+    // SetWateringTimer(0, 0, 8 * 3600);
 }
 
+
+
+// logic tưới cấy:
+
+//     có hai chế độ là tự động và điều khiển bằng tay
+//     nếu mất kết nối thì tự động chuyển về chế độ tự động
+//     khi ở chế độ điều khiển bằng tay, người dùng tự bật lên thì tự tắt đi
+//     khi ở chế độ tự động, người dùng lập lịch tưới hàng ngày
+//     có hai giá trị độ ẩm là mix và max. ví dụ min=60 và max=90
+//     nếu độ ẩm bé hơn min thì tưới cây, nếu độ ẩm lớn hơn max thì không tưới, 
+//     nếu độ ẩm nằm giữa min và max thì tưới theo lịch
+//     
+//     khi máy bơm được bật thì nó được tưới tối đa trong khoảng thời gian được lưu trong mảng max_time[4] (auto)
+//     khi máy bơm tắt thì nó phải chờ một khoảng thời gian là ActivationTime mới bật lên lại được (auto)
+//     logic trên được triển khải bằng ActivationTime, t[4], count_status[4]
+
+
 void loop() {
-    if (!client.connected()) {
-        reconnect();
-    }
-    client.loop();
-
-    float lux = readLux();
-    Serial.println("Lux: " + String(lux));
-    client.publish(light_topic, String(lux).c_str());
-
-    // Điều khiển Relay
-    if (currentMode == AUTO) {
-        if (lux < 500) {
-            digitalWrite(relayPin, LOW);
-        } else {
-            digitalWrite(relayPin, HIGH);
+    handleMQTT();                 // Xử lý kết nối MQTT
+    if (Timer(&time1, 3000)){ // kết nối lại mqtt, wifi
+        if(!mqtt_connected){
+            connect_MQTT();
         }
-    } else if (currentMode == MANUAL) {
-        // Chế độ thủ công: Giữ trạng thái theo điều khiển của người dùng
-        digitalWrite(relayPin, manualState);
     }
-
-    delay(1000);
+    if (Timer(&time2,5000)){ // đọc, gửi, in giá trị cảm biến
+        readSensors();                
+        for (int i = 0; i < 4; i++) {
+            String message = String(i + 1) + " " + String(sensor[i]);
+            publishData("RH", message.c_str());
+        }
+        String pump_status = String(status[0]) + String(status[1]) + String(status[2]) + String(status[3]);
+        publishData("PS", pump_status.c_str());
+    }
+    if (Timer(&time3,500)){ // thực thi bật tắt máy bơm
+        manageIrrigation(RL, status);
+    }
+    if (Timer(&time4,990)){ // thay đổi trạng thái
+        updateStatus(); // thay đổi trạng thái máy bơm
+        for (int i=0; i<4; i++){ // kiểm soát thời gian tưới tối đa và thời gian tối thiểu từ khi tắt đến khi bật (chế độ auto)
+            if (count_status[i]){
+                t[i]--; // bắt buộc để timer ở đây là 1 giây để hoạt động bình thường
+            }
+            if (t[i]<-ActivationTime){
+                count_status[i]=false;
+                t[i]=max_time[i];
+            }
+        }
+    }
+    if (Timer(&time5,991)){ // hẹn giờ
+        ProcessTimerString(mqttMessage); // hẹn giờ bơm
+        checkAndActivateTimers();  // kích hoạt các máy bơm đã hẹn giờ
+    }
+    // Đồng bộ thời gian mỗi 15 phút
+    updateTimeSync();
 }
