@@ -12,7 +12,7 @@ const float RL = 1000; // Điện trở cố định trong mạch phân áp
 bool ADS1115_connected = true;
 bool DHT11_connected = true;
 
-#define DHTPIN 4    // Chân kết nối tín hiệu của DHT11 với ESP32
+#define DHTPIN 16    // Chân kết nối tín hiệu của DHT11 với ESP32
 
 // sensor/ADC
 ADS1115_WE adc(0x48);
@@ -111,7 +111,13 @@ void readHumidityTemperature(){
     // Đọc giá trị nhiệt độ và độ ẩm
     humidity = dht.readHumidity();
     temperature = dht.readTemperature();
+    Serial.print(F("Độ ẩm: "));
+    Serial.print(humidity);
+    Serial.println(F(" %"));
 
+    Serial.print(F("Nhiệt độ: "));
+    Serial.print(temperature);
+    Serial.println(F(" °C"));
     // Kiểm tra nếu việc đọc dữ liệu bị lỗi
     if (isnan(humidity) || isnan(temperature)) {
         Serial.println(F("Lỗi: Không đọc được dữ liệu từ cảm biến DHT11"));

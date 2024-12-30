@@ -6,6 +6,7 @@ extern float sensor[10];
 extern bool ADS1115_connected;
 extern bool DHT11_connected;
 extern float temperature;
+extern float humidity;
 extern float sensorMax[10];
 extern float sensorMin[10];
 

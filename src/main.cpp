@@ -7,7 +7,7 @@
 
 
 int ADC[6] = {25, 32, 33, 34, 35, 36}; // dùng làm input, 4 cái của ADS1115 nữa là 10. giao tiếp I2C
-int RL[11] = {2, 5, 14, 16, 17, 18, 19, 23, 27, 39, 26}; // 10 cặp và chân ở vị trí số 10 RL[10] dành cho quạt
+int RL[11] = {2, 5, 14, 4, 17, 18, 19, 23, 27, 39, 26}; // 10 cặp và chân ở vị trí số 10 RL[10] dành cho quạt
 
 unsigned long current_time;
 unsigned long time1=0;
@@ -145,14 +145,12 @@ void loop() {
         publishData("PS", device_status.c_str());
         config_sensor();
         if (DHT11_connected){
-            float h = dht.readHumidity();
-            float t = dht.readTemperature();
-            if (isnan(h) || isnan(t)) {
+            if (isnan(humidity) || isnan(temperature)) {
                 Serial.println("Failed to read from DHT sensor!");
                 return;
             }
-            publishData("h", h.c_str());
-            publishData("t", t.c_str());
+            publishData("h", String(humidity).c_str());
+            publishData("t", String(temperature).c_str());
         }
     }
     if (Timer(&time3,500)){ // thực thi bật tắt relay
