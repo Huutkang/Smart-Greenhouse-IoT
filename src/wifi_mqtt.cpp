@@ -53,7 +53,7 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 )~~~";
 
 
-bool isActive[10] = {true, true, false, false, false, false, false, false, false, false}; //  trong bản demo dùng 2 cảm biến ánh sáng và nhiệt độ nên các cái khác được tắt đi
+bool isActive[10] = {true, true, true, true, true, true, true, true, true, true}; //  trong bản demo dùng 2 cảm biến ánh sáng và nhiệt độ nên các cái khác được tắt đi
 
 bool isAuto[10] = {true, true, true, true, true, true, true, true, true, true};  // true: AUTO, false: not AUTO.
 
@@ -62,13 +62,13 @@ bool status[10] = {false, false, false, false, false, false, false, false, false
 bool mqtt_connected = false;
 
 int count_connect_wifi = 0;
-int lower_limit[10] = {60, 60, 60, 60, 60, 60, 60, 60, 60, 60}; // 10 cảm biến tối đa  (6 + 4 ads1115)
-int upper_limit[10] = {90, 90, 90, 90, 90, 90, 90, 90, 90, 90};
+int lower_limit[9] = {60, 60, 60, 60, 60, 60, 60, 60, 60}; // 9 cảm biến tối đa  (5 + 4 ads1115)
+int upper_limit[9] = {90, 90, 90, 90, 90, 90, 90, 90, 90};
 int maxTemperature;
-int max_time[10] = {60, 60, 60, 60, 60, 60, 60, 60}; // 10 relay
+int max_time[9] = {60, 60, 60, 60, 60, 60, 60, 60};
 
-int ssMin[10] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1}; // mảng đặt lại giá trị max, min cho cảm biến
-int ssMax[10] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1}; // chỉ dùng cho nhà phát triển, k dành cho người dùng phổ thông
+int ssMin[9] = {-1, -1, -1, -1, -1, -1, -1, -1, -1}; // mảng đặt lại giá trị max, min cho cảm biến
+int ssMax[9] = {-1, -1, -1, -1, -1, -1, -1, -1, -1}; // chỉ dùng cho nhà phát triển, k dành cho người dùng phổ thông
 
 // Biến lưu trữ chuỗi MQTT nhận được
 String mqttMessage = "";
@@ -100,30 +100,31 @@ void callback(char* topic, byte* payload, unsigned int length) {
     }
 
     if (String(topic) == control_topic) { // người dùng bật relay số index
+        Serial.println(message);
         if (message.startsWith("ON")) {
-            int relayIndex = message.substring(2).toInt() - 1;
-            if (relayIndex >= 0 && relayIndex < 10) {
+            int relayIndex = message.substring(2).toInt();
+            if (relayIndex >= 0 && relayIndex < 9) {
                 isAuto[relayIndex] = false;
                 status[relayIndex] = true;
             }
         } else if (message.startsWith("OFF")) { // người dùng tắt relay số index
-            int relayIndex = message.substring(3).toInt() - 1;
-            if (relayIndex >= 0 && relayIndex < 10) {
+            int relayIndex = message.substring(3).toInt();
+            if (relayIndex >= 0 && relayIndex < 9) {
                 isAuto[relayIndex] = false;
                 status[relayIndex] = false;
             }
         } else if (message.startsWith("AUTO")) { // người dùng đặt chế độ auto cho relay số index
-            int relayIndex = message.substring(4).toInt() - 1;
-            if (relayIndex >= 0 && relayIndex < 10) {
+            int relayIndex = message.substring(4).toInt();
+            if (relayIndex >= 0 && relayIndex < 9) {
                 isAuto[relayIndex] = true;
                 status[relayIndex] = false;
             }
         }
     } else if (String(topic) == config_topic) {
         if (message.startsWith("AC")) { // tính năng chỉ dùng cho nhà phát triển để bật tắt cấu hình lại cảm biến, relay
-            int index = message.substring(2, 3).toInt() - 1;
+            int index = message.substring(2, 3).toInt();
             int iAc = message.substring(4, 5).toInt();
-            if (index >= 0 && index < 10) {
+            if (index >= 0 && index < 9) {
                 if (iAc == 1){
                     isActive[index] = true;
                 } else if (iAc == 0){
@@ -131,33 +132,33 @@ void callback(char* topic, byte* payload, unsigned int length) {
                 }
             }
         }else if (message.startsWith("ssmin")) { // giúp nhà phán triển chuẩn hóa lại giá trị cảm biến
-            int index = message.substring(5, 6).toInt() - 1;
+            int index = message.substring(5, 6).toInt();
             int newMin = message.substring(7).toInt();
-            if (index >= 0 && index < 10) {
+            if (index >= 0 && index < 9) {
                 ssMin[index] = newMin;
             }
         } else if (message.startsWith("ssmax")) { // giúp nhà phán triển chuẩn hóa lại giá trị cảm biến
-            int index = message.substring(5, 6).toInt() - 1;
+            int index = message.substring(5, 6).toInt();
             int newMax = message.substring(7).toInt();
-            if (index >= 0 && index < 10) {
+            if (index >= 0 && index < 9) {
                 ssMax[index] = newMax;
             }
         }else if (message.startsWith("MIN")) { // người dùng đặt ngưỡng dưới của cảm biến
-            int relayIndex = message.substring(3, 4).toInt() - 1;
+            int relayIndex = message.substring(3, 4).toInt();
             int newMin = message.substring(5).toInt();
-            if (relayIndex >= 0 && relayIndex < 10 && newMin > 0 && newMin <= upper_limit[relayIndex]) {
+            if (relayIndex >= 0 && relayIndex < 9 && newMin > 0 && newMin <= upper_limit[relayIndex]) {
                 lower_limit[relayIndex] = newMin;
             }
         } else if (message.startsWith("MAX")) { // người dùng đặt ngưỡng trên của cảm biến
-            int relayIndex = message.substring(3, 4).toInt() - 1;
+            int relayIndex = message.substring(3, 4).toInt();
             int newMax = message.substring(5).toInt();
-            if (relayIndex >= 0 && relayIndex < 10 && newMax > lower_limit[relayIndex] && newMax <= 100) {
+            if (relayIndex >= 0 && relayIndex < 9 && newMax > lower_limit[relayIndex] && newMax <= 100) {
                 upper_limit[relayIndex] = newMax;
             }
         } else if (message.startsWith("TM")) { // người dùng đặt giá trị thời gian hoạt động tối đa cho thiết bị số ...
-            int relayIndex = message.substring(2, 3).toInt() - 1;
+            int relayIndex = message.substring(2, 3).toInt();
             int newMaxTime = message.substring(4).toInt();
-            if (relayIndex >= 0 && relayIndex < 10 && newMaxTime > 0) {
+            if (relayIndex >= 0 && relayIndex < 9 && newMaxTime > 0) {
                 max_time[relayIndex] = newMaxTime;
             }
         } else if (message.startsWith("MT")) {

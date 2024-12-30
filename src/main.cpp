@@ -6,8 +6,8 @@
 
 
 
-int ADC[6] = {25, 32, 33, 34, 35, 36}; // dùng làm input, 4 cái của ADS1115 nữa là 10. giao tiếp I2C
-int RL[11] = {2, 5, 14, 4, 17, 18, 19, 23, 27, 39, 26}; // 10 cặp và chân ở vị trí số 10 RL[10] dành cho quạt
+int ADC[5] = {32, 33, 34, 35, 36}; // dùng làm input, 4 cái của ADS1115 nữa là 10. giao tiếp I2C
+int RL[10] = {2, 4, 5, 14, 17, 18, 19, 23, 27, 26}; // 10 cặp và chân ở vị trí số 10 RL[10] dành cho quạt
 
 unsigned long current_time;
 unsigned long time1=0;
@@ -36,7 +36,7 @@ int Timer(unsigned long *time, int wait){
 }
 
 void updateStatus() {
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 9; i++) {
         if (!isActive[i]){ // nếu thiết bị không dùng thì bỏ qua, và đặt lại chế độ là tắt.
             if (status[i]){
                 status[i] = false;
@@ -69,10 +69,25 @@ void updateStatus() {
             }
         }
     }
+    if (!isActive[9]){
+        if (status[9]){
+            status[9] = false;
+        }
+        return;
+    }
+    if (!isAuto[9]) {
+        // Nếu không ở chế độ tự động, bỏ qua relay này
+        return;
+    }
+    if (temperature > maxTemperature){
+        status[9] = true; // nhiệt độ quá cao thì bật quạt (maxTemperature do setup của người dùng)
+    }else{
+        status[9] = false; 
+    }
 }
 
 void config_sensor(){  // tính năng dành cho nhà phát triển. người dùng k dùng đến
-    for (int i = 0; i <10; i++) {
+    for (int i = 0; i <9; i++) {
         if (ssMin[i] >=0){
             sensorMin[i] = ssMin[i];
             ssMin[i] = -1;
@@ -154,7 +169,10 @@ void loop() {
         }
     }
     if (Timer(&time3,500)){ // thực thi bật tắt relay
-        Serial.println(getCurrentTime());
+        manageRelay(RL, status);
+        for (int i=0; i<10; i++){
+            Serial.println(status[i]);
+        }
     }
     if (Timer(&time4,998)){ // thay đổi trạng thái
         updateStatus(); // thay đổi trạng thái relay
@@ -171,12 +189,5 @@ void loop() {
     if (Timer(&time5,991)){ // hẹn giờ
         ProcessTimerString(mqttMessage); // hẹn giờ hoạt động
         checkAndActivateTimers();  // kích hoạt các relay đã hẹn giờ
-    }
-    if (Timer(&time6, 60000)){ // điều khiển quạt
-        if (temperature > maxTemperature){
-            digitalWrite(RL[10], LOW); // nhiệt độ quá cao thì bật quạt (maxTemperature do setup của người dùng)
-        }else{
-            digitalWrite(RL[10], HIGH); 
-        }
     }
 }

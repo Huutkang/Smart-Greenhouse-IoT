@@ -10,7 +10,7 @@ extern float humidity;
 extern float sensorMax[10];
 extern float sensorMin[10];
 
-void setupSensors(int ADC[6]);
+void setupSensors(int ADC[5]);
 void readSensorsADS1115();
 void readLightSensor(int pin);
 void readHumidityTemperature();

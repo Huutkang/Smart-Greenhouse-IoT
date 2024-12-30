@@ -7,13 +7,13 @@
 extern bool isAuto[10];
 extern bool status[10];
 extern bool mqtt_connected;
-extern int lower_limit[10];
-extern int upper_limit[10];
-extern int max_time[10];
+extern int lower_limit[9];
+extern int upper_limit[9];
+extern int max_time[9];
 extern int maxTemperature;
 extern bool isActive[10];
-extern int ssMin[10];
-extern int ssMax[10];
+extern int ssMin[9];
+extern int ssMax[9];
 extern String mqttMessage;
 
 void setupWiFi();

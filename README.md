@@ -37,7 +37,7 @@ Dự án này xây dựng một hệ thống điều khiển thông minh cho nh�
 
 Hệ thống được thiết kế với luồng thông tin như sau:
 
-![Sơ đồ khối hệ thống](./diagram.png)
+![Sơ đồ khối hệ thống](./data/images/diagram.png)
 
 ## Các bước triển khai
 

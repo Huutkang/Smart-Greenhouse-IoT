@@ -23,7 +23,7 @@ DHT dht(DHTPIN, DHT11);
 
 float humidity;
 float temperature;
-int arr_ADC[6];
+int arr_ADC[5];
 
 // mảng lưu giá trị của cảm biến chuyển về dạng %
 float sensor[10] = {100, 100, 100, 100, 100, 100, 100, 100, 100, 100};
@@ -38,8 +38,8 @@ float sensorMin[10] = {1460, 1210, 0, 0, 0, 0, 0, 0, 0, 0};
 // ADS1115_WE dành cho những việc đo giá trị có khoảng cách min->max nhỏ hơn nhiều so với thang đo. hoặc đo ở khoảng cách xa và gửi dữ liệu về
 
 // Khởi tạo các cảm biến
-void setupSensors(int ADC[6]) {
-    for (int i = 0; i < 6; i++) {
+void setupSensors(int ADC[5]) {
+    for (int i = 0; i < 5; i++) {
         arr_ADC[i] = ADC[i];
     }
     dht.begin();
@@ -48,7 +48,7 @@ void setupSensors(int ADC[6]) {
         Serial.println("ADS1115 not connected!");
         ADS1115_connected = false;
     }
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 5; i++) {
         pinMode(ADC[i], INPUT);
     }
 }
@@ -94,7 +94,7 @@ void readSoilMoisture(int pin) {
 }
 
 void readSensor() {
-    for (int i = 0; i <6; i++){
+    for (int i = 0; i <5; i++){
         if (i<3){
             readLightSensor(i);
         }else{
