@@ -11,6 +11,9 @@ extern int lower_limit[10];
 extern int upper_limit[10];
 extern int max_time[10];
 extern int maxTemperature;
+extern bool isActive[10];
+extern int ssMin[10];
+extern int ssMax[10];
 extern String mqttMessage;
 
 void setupWiFi();

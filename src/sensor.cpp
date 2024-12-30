@@ -23,15 +23,16 @@ DHT dht(DHTPIN, DHT11);
 
 float humidity;
 float temperature;
-int arr_ADC[5];
+int arr_ADC[6];
 
 // mảng lưu giá trị của cảm biến chuyển về dạng %
 float sensor[10] = {100, 100, 100, 100, 100, 100, 100, 100, 100, 100};
 
 // giá trị đo max của cảm biến ở môi trường thực tế (cần test trước để hiệu chỉnh). 4 cái sau là của ADS1115_WE
-float sensorMax[10] = {2760, 2680, 2780, 2760, 2760, 2760, 2760, 2760, 2760, 2760};
+float sensorMax[10] = {2760, 2680, 4095, 4095, 4095, 4095, 32767, 32767, 32767, 32767};
 // giá trị đo min của cảm biến ở môi trường thực tế (cần test trước để hiệu chỉnh). hiện tại mới dùng 2 cái đầu tiên cho ánh sáng và độ ẩm đất
-float sensorMin[10] = {1460, 1210, 1510, 1500, 1510, 1510, 1510, 1510, 1510, 1510};
+float sensorMin[10] = {1460, 1210, 0, 0, 0, 0, 0, 0, 0, 0};
+
 
 // có 10 cảm biến là 6 chân ADC được chọn trên esp32 và 4 chân bổ sung từ ADS1115_WE.
 // ADS1115_WE dành cho những việc đo giá trị có khoảng cách min->max nhỏ hơn nhiều so với thang đo. hoặc đo ở khoảng cách xa và gửi dữ liệu về
@@ -80,14 +81,30 @@ void readSensorsADS1115() {
 
 }
 
-void readLightSensor() {
-    int adcValue = analogRead(arr_ADC[0]);
-    int lightSensor = map(adcValue, sensorMax[0], sensorMin[0], 100, 0);
-    sensor[0] = constrain(lightSensor, 0, 100);
+void readLightSensor(int pin) {
+    int adcValue = analogRead(arr_ADC[pin]);
+    int value = map(adcValue, sensorMax[pin], sensorMin[pin], 100, 0);
+    sensor[0] = constrain(value, 0, 100);
 }
 
-int readSensor(int pin) {
-    return analogRead(pin);
+void readSoilMoisture(int pin) {
+    int adcValue = analogRead(arr_ADC[pin]);
+    int value = map(adcValue, sensorMax[pin], sensorMin[pin], 0, 100);
+    sensor[0] = constrain(value, 0, 100);
+}
+
+void readSensor() {
+    for (int i = 0; i <6; i++){
+        if (i<3){
+            readLightSensor(i);
+        }else{
+            readSoilMoisture(i);
+        }
+    }
+    if (ADS1115_connected){
+        readSensorsADS1115();
+    }
+    readHumidityTemperature();
 }
 
 void readHumidityTemperature(){

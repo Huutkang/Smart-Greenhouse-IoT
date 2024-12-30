@@ -6,10 +6,12 @@ extern float sensor[10];
 extern bool ADS1115_connected;
 extern bool DHT11_connected;
 extern float temperature;
+extern float sensorMax[10];
+extern float sensorMin[10];
 
 void setupSensors(int ADC[6]);
 void readSensorsADS1115();
 void readLightSensor(int pin);
 void readHumidityTemperature();
-int readSensor(int pin);
+void readSensor();
 #endif

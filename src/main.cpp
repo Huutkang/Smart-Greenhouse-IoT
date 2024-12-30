@@ -6,8 +6,8 @@
 
 
 
-int ADC[6] = {25, 32, 33, 34, 35, 36};
-int RL[11] = {2, 5, 14, 16, 17, 18, 19, 23, 27, 39, 26};
+int ADC[6] = {25, 32, 33, 34, 35, 36}; // dùng làm input, 4 cái của ADS1115 nữa là 10. giao tiếp I2C
+int RL[11] = {2, 5, 14, 16, 17, 18, 19, 23, 27, 39, 26}; // 10 cặp và chân ở vị trí số 10 RL[10] dành cho quạt
 
 unsigned long current_time;
 unsigned long time1=0;
@@ -19,8 +19,8 @@ unsigned long time6=0;
 
 
 int t[10];
-int ActivationTime = 60;
-bool count_status[4] = {false, false, false, false};
+int ActivationTime = 60; // thời gian chờ trước khi bật lại
+bool count_status[10] = {false, false, false, false, false, false, false, false, false, false};
 
 
 // với kiểu dữ liệu unsigned long: 10 - 4294967295 = 11 nên không lo tràn số ở hàm millis
@@ -37,6 +37,12 @@ int Timer(unsigned long *time, int wait){
 
 void updateStatus() {
     for (int i = 0; i < 10; i++) {
+        if (!isActive[i]){ // nếu thiết bị không dùng thì bỏ qua, và đặt lại chế độ là tắt.
+            if (status[i]){
+                status[i] = false;
+            }
+            continue;
+        }
         if (!isAuto[i]) {
             // Nếu không ở chế độ tự động, bỏ qua relay này
             continue;
@@ -65,6 +71,18 @@ void updateStatus() {
     }
 }
 
+void config_sensor(){  // tính năng dành cho nhà phát triển. người dùng k dùng đến
+    for (int i = 0; i <10; i++) {
+        if (ssMin[i] >=0){
+            sensorMin[i] = ssMin[i];
+            ssMin[i] = -1;
+        }
+        if (ssMax[i] >=0){
+            sensorMax[i] = ssMax[i];
+            ssMax[i] = -1;
+        }
+    }
+}
 
 void setup() {
     Serial.begin(115200);
@@ -112,13 +130,30 @@ void loop() {
         }
     }
     if (Timer(&time2,5000)){ // đọc, gửi, in giá trị cảm biến
-        readSensorsADS1115();                
-        for (int i = 0; i < 4; i++) {
+        readSensor();                
+        for (int i = 0; i < 10; i++) {
+            if (!isActive[i]){
+                continue;
+            }
             String message = String(i + 1) + " " + String(sensor[i]);
-            publishData("RH", message.c_str());
+            publishData("value", message.c_str());
         }
-        String pump_status = String(status[0]) + String(status[1]) + String(status[2]) + String(status[3]);
-        publishData("PS", pump_status.c_str());
+        String device_status;
+        for (int i=0; i<10; i++){
+            device_status += String(status[i]); // trạng thái thiết bị. bật hay tắt
+        }
+        publishData("PS", device_status.c_str());
+        config_sensor();
+        if (DHT11_connected){
+            float h = dht.readHumidity();
+            float t = dht.readTemperature();
+            if (isnan(h) || isnan(t)) {
+                Serial.println("Failed to read from DHT sensor!");
+                return;
+            }
+            publishData("h", h.c_str());
+            publishData("t", t.c_str());
+        }
     }
     if (Timer(&time3,500)){ // thực thi bật tắt relay
         Serial.println(getCurrentTime());
