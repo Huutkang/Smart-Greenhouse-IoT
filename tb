@@ -1,0 +1,37 @@
+ON1	control
+ON2	control
+ON3	control
+ON4	control
+OFF1	control
+OFF2	control
+OFF3	control
+OFF4	control
+AUTO1	control
+AUTO2	control
+AUTO3	control
+AUTO4	control
+MIN1 55	config
+MIN2 56	config
+MIN3 57	config
+MIN4 58	config
+MAX1 90	config
+MAX2 91	config
+MAX3 92	config
+MAX4 85	config
+23 off	config
+41 28880	config
+TM1 60	config
+TM2 3600	config
+TM3 5	config
+TM4 45	config
+1 tin nhắn	noti
+2 tin nhắn	noti
+3 tin nhắn	noti
+4 tin nhắn	noti
+1 90	RH
+2 60	RH
+3 95	RH
+4 50	RH
+1001	PS
+
+MT 40

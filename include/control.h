@@ -1,7 +1,7 @@
 #ifndef CONTROL_H
 #define CONTROL_H
 
-void setupIrrigation(int RL[4]);
-void manageIrrigation(int RL[4], bool status[4]);
+void setupRelay(int RL[10]);
+void manageRelay(int RL[10], bool status[10]);
 
 #endif

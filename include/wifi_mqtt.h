@@ -4,12 +4,13 @@
 #include <Arduino.h>
 
 
-extern bool isAuto[4];
-extern bool status[4];
+extern bool isAuto[10];
+extern bool status[10];
 extern bool mqtt_connected;
-extern int min_moisture[4];
-extern int max_moisture[4];
-extern int max_time[4];
+extern int lower_limit[10];
+extern int upper_limit[10];
+extern int max_time[10];
+extern int maxTemperature;
 extern String mqttMessage;
 
 void setupWiFi();

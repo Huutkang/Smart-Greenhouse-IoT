@@ -1,51 +1,106 @@
 #include "sensor.h"
 #include <Wire.h>
-#include <SPI.h>
-#include <Adafruit_ADS1X15.h>
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
+#include <ADS1115_WE.h>
+
+
+const float Vref = 3.3; // Điện áp tham chiếu
+const float RL = 1000; // Điện trở cố định trong mạch phân áp
+
+bool ADS1115_connected = true;
+bool DHT11_connected = true;
+
+#define DHTPIN 4    // Chân kết nối tín hiệu của DHT11 với ESP32
 
 // sensor/ADC
-Adafruit_ADS1115 adc; // Sử dụng thư viện Adafruit ADS1115
-float tf = 0.1;                                 // Yếu tố tin cậy để làm mịn bộ lọc
-float sensor[4] = {100, 100, 100, 100};         // Đặt giá trị bắt đầu cao nhất để tránh các kích hoạt không mong muốn
-float sensorDry[4] = {9034, 9043, 9093, 9057};  // Đọc từ khi nổi lên hoàn toàn trong nước
-float sensorWet[4] = {20571, 20595, 20540, 20576};  // Đọc từ khi ở trong không khí 'khô'
+ADS1115_WE adc(0x48);
+
+// sensor/DHT11
+DHT dht(DHTPIN, DHT11);
+
+
+float humidity;
+float temperature;
+int arr_ADC[5];
+
+// mảng lưu giá trị của cảm biến chuyển về dạng %
+float sensor[10] = {100, 100, 100, 100, 100, 100, 100, 100, 100, 100};
+
+// giá trị đo max của cảm biến ở môi trường thực tế (cần test trước để hiệu chỉnh). 4 cái sau là của ADS1115_WE
+float sensorMax[10] = {2760, 2680, 2780, 2760, 2760, 2760, 2760, 2760, 2760, 2760};
+// giá trị đo min của cảm biến ở môi trường thực tế (cần test trước để hiệu chỉnh). hiện tại mới dùng 2 cái đầu tiên cho ánh sáng và độ ẩm đất
+float sensorMin[10] = {1460, 1210, 1510, 1500, 1510, 1510, 1510, 1510, 1510, 1510};
+
+// có 10 cảm biến là 6 chân ADC được chọn trên esp32 và 4 chân bổ sung từ ADS1115_WE.
+// ADS1115_WE dành cho những việc đo giá trị có khoảng cách min->max nhỏ hơn nhiều so với thang đo. hoặc đo ở khoảng cách xa và gửi dữ liệu về
 
 // Khởi tạo các cảm biến
-void setupSensors() {
-    Wire.begin(); // Không cần chỉ định SCL và SDA
-    if (!adc.begin()) {
-        // Serial.println("Không tìm thấy ADS1115. Kiểm tra kết nối!");
-        while (1); // Dừng chương trình nếu không tìm thấy ADS1115
+void setupSensors(int ADC[6]) {
+    for (int i = 0; i < 6; i++) {
+        arr_ADC[i] = ADC[i];
     }
-    // Serial.println("ADS1115 đã sẵn sàng.");
+    dht.begin();
+    Wire.begin(SCL, SDA);
+    if (!adc.init()) {
+        Serial.println("ADS1115 not connected!");
+        ADS1115_connected = false;
+    }
+    for (int i = 0; i < 6; i++) {
+        pinMode(ADC[i], INPUT);
+    }
 }
 
 // Đọc giá trị từ kênh ADC
-float readChannel(int channel) {
-    if (channel < 0 || channel > 3) {
-        // Serial.println("Kênh không hợp lệ!");
-        return 0.0;
-    }
-    int16_t adcValue = adc.readADC_SingleEnded(channel);
-    return adcValue;
+float readChannel(ADS1115_MUX channel) {
+    float voltage = 0.0;
+    adc.setCompareChannels(channel);
+    adc.startSingleMeasurement();
+    voltage = adc.getResult_mV();
+    return voltage;
 }
+
 
 // Đọc giá trị từ các cảm biến
-void readSensors() {
+void readSensorsADS1115() {
     float reading[4];
+
     // Đọc giá trị thô từ các kênh
+    reading[0] = readChannel(ADS1115_COMP_0_GND);
+    reading[1] = readChannel(ADS1115_COMP_1_GND);
+    reading[2] = readChannel(ADS1115_COMP_2_GND);
+    reading[3] = readChannel(ADS1115_COMP_3_GND);
+
+    // Chuyển đổi thành phần trăm, lọc và ràng buộc giá trị
     for (int i = 0; i < 4; i++) {
-        reading[i] = readChannel(i);
-        reading[i] = map(reading[i], sensorDry[i], sensorWet[i], 100, 0);
+        reading[i] = map(reading[i], sensorMax[i], sensorMin[i], 0, 100);
         sensor[i] = constrain(reading[i], 0, 100);
-        // sensor[i] = reading[i]; //test
     }
+
 }
 
+void readLightSensor() {
+    int adcValue = analogRead(arr_ADC[0]);
+    int lightSensor = map(adcValue, sensorMax[0], sensorMin[0], 100, 0);
+    sensor[0] = constrain(lightSensor, 0, 100);
+}
 
-// float readLux() {
-//     int adcValue = analogRead(lightSensorPin);
-//     float voltage = (adcValue * Vref) / 4095.0;
-//     // một cách đổi nào đó từ hiệu điện thế sang thang đo độ sáng
-//     return 2000*voltage; // Tạm tính, cần điều chỉnh theo datasheet
-// }
+int readSensor(int pin) {
+    return analogRead(pin);
+}
+
+void readHumidityTemperature(){
+    // Đọc giá trị nhiệt độ và độ ẩm
+    humidity = dht.readHumidity();
+    temperature = dht.readTemperature();
+
+    // Kiểm tra nếu việc đọc dữ liệu bị lỗi
+    if (isnan(humidity) || isnan(temperature)) {
+        Serial.println(F("Lỗi: Không đọc được dữ liệu từ cảm biến DHT11"));
+        DHT11_connected = false;
+        return;
+    }else{
+        DHT11_connected = true;
+    }
+}

@@ -1,0 +1,65 @@
+1 cụm relay 4 relay
+
+2 led (đã đủ)
+1 máy bơm (đã đủ)
+1 quạt (đã có)
+
+
+1 cảm biến ánh sáng (đã có)
+1 cảm biến độ ẩm đất (đã có)
+1 cảm biến nhiệt độ, độ ẩm không khí
+
+
+
+DHT11	GPIO4
+
+GPIO32 (ADC1_CH4)
+GPIO33 (ADC1_CH5)
+GPIO34 (ADC1_CH6) 
+GPIO35 (ADC1_CH7) 
+GPIO36 (ADC1_CH0) 
+GPIO39 (ADC1_CH3) 
+
+
+
+chân Output:
+
+GPIO2 (có thể kéo lên, thả nổi khi khởi động)
+GPIO4
+GPIO5
+GPIO16
+GPIO17
+GPIO18
+GPIO19
+GPIO23
+
+
+
+
+output điều khiển các relay. mỗi relay có bộ hẹn giờ riêng. 4 bộ. như cái tưới. 
+
+
+input đo cái gì đó
+
+kết nối sẵn các chân
+
+còn chân chưa kết nối thì chỉ để bật tắt qua mạng, logic code sau
+
+
+## Tính năng chính
+- **Điều khiển ánh sáng:** Dựa vào cảm biến ánh sáng, hệ thống tự động điều chỉnh đèn LED để cung cấp đủ ánh sáng cho cây trồng.
+- **Tưới nước tự động:** Khi độ ẩm đất thấp, máy bơm nước sẽ tự động bật để tưới cây.
+- **Quản lý nhiệt độ:** Cảm biến nhiệt độ giúp điều chỉnh quạt làm mát khi nhiệt độ trong nhà kính quá cao.
+- **Giao diện điều khiển từ xa:** Người dùng theo dõi thông số môi trường và điều khiển các thiết bị thực thi qua một giao diện web hoặc ứng dụng smartphone sử dụng Node-RED.
+
+
+cảm biến ánh sáng. nếu ánh sáng quá yếu thì bật 2 led, nếu hơi yếu thì bật một led, nếu đủ sáng thì thôi.
+ngoài ra còn có hẹn giờ bật tắt đèn. bật tắt đèn thủ công. 
+
+cảm biến nhiệt độ. nếu nhiệt độ quá cao thì bật quạt, hoặc bật quạt thủ công.
+
+cảm biến độ ẩm đất, nếu độ ẩm đất thấp dưới ngưỡng thì tưới, trong khoảng min, max thì tưới theo lịch. lớn hơn max thì không tưới.
+
+có vài chân dư input và output. có thể dùng để setup sau.
+các chân này được setup input, output sẵn. nếu được dùng thì sẽ đọc dữ liệu chân input và đẩy lên theo thời gian setup.
+nếu k dùng chân output thì chân này được để mặc định ở mức cao (relay tắt).

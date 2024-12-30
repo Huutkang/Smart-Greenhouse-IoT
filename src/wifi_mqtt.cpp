@@ -1,7 +1,11 @@
 #include "wifi_mqtt.h"
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include <WiFiClientSecure.h>
 #include <WiFiManager.h>
+
+
+
 
 // Cấu hình HiveMQ Broker
 const char* mqtt_server = "271915439423479da7c90ddd3723cd0c.s1.eu.hivemq.cloud";
@@ -49,37 +53,43 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 )~~~";
 
 
-bool isAuto[4] = {true, true, true, true};  // true: AUTO, false: not AUTO
-bool status[4] = {false, false, false, false};
+
+
+bool isAuto[10] = {true, true, true, true, true, true, true, true, true, true};  // true: AUTO, false: not AUTO
+
+bool status[10] = {false, false, false, false, false, false, false, false, false, false};
+
 bool mqtt_connected = false;
 
 int count_connect_wifi = 0;
-int min_moisture[4] = {60, 60, 60, 60};
-int max_moisture[4] = {90, 90, 90, 90};
-int max_time[4] = {60, 60, 60, 60};
+int lower_limit[10] = {60, 60, 60, 60, 60, 60, 60, 60, 60, 60}; // 10 cảm biến tối đa  (6 + 4 ads1115)
+int upper_limit[10] = {90, 90, 90, 90, 90, 90, 90, 90, 90, 90};
+int maxTemperature;
+int max_time[10] = {60, 60, 60, 60, 60, 60, 60, 60}; // 10 relay
 
 
 // Biến lưu trữ chuỗi MQTT nhận được
 String mqttMessage = "";
 
+
 // Định nghĩa MQTT và Wi-Fi
 WiFiClientSecure espClient;          // Đối tượng WiFiClient
 PubSubClient mqttClient(espClient);  // Đối tượng MQTT client
+
+
+
 
 void setupWiFi() {
     WiFiManager wifiManager;
 
     // Tự động kết nối hoặc tạo Access Point
-    if (!wifiManager.autoConnect("ESP8266_AP")) {
+    if (!wifiManager.autoConnect("ESP32_AP")) {
         // Serial.println("Không kết nối được Wi-Fi");
         delay(3000);
         ESP.restart();  // Khởi động lại thiết bị
     }
-    // Serial.println("Đã kết nối Wi-Fi!");
-    // sau cho set timeout là 5 phút. quá 5 phút sẽ thoát web và tự động kết nối lại với pass cũ nếu có
-    // Thiết lập chứng chỉ CA
-    espClient.setCACert(ca_cert);
 }
+
 
 void callback(char* topic, byte* payload, unsigned int length) {
     String message = "";
@@ -90,19 +100,19 @@ void callback(char* topic, byte* payload, unsigned int length) {
     if (String(topic) == control_topic) {
         if (message.startsWith("ON")) {
             int relayIndex = message.substring(2).toInt() - 1;
-            if (relayIndex >= 0 && relayIndex < 4) {
+            if (relayIndex >= 0 && relayIndex < 10) {
                 isAuto[relayIndex] = false;
                 status[relayIndex] = true;
             }
         } else if (message.startsWith("OFF")) {
             int relayIndex = message.substring(3).toInt() - 1;
-            if (relayIndex >= 0 && relayIndex < 4) {
+            if (relayIndex >= 0 && relayIndex < 10) {
                 isAuto[relayIndex] = false;
                 status[relayIndex] = false;
             }
         } else if (message.startsWith("AUTO")) {
             int relayIndex = message.substring(4).toInt() - 1;
-            if (relayIndex >= 0 && relayIndex < 4) {
+            if (relayIndex >= 0 && relayIndex < 10) {
                 isAuto[relayIndex] = true;
                 status[relayIndex] = false;
             }
@@ -111,34 +121,37 @@ void callback(char* topic, byte* payload, unsigned int length) {
         if (message.startsWith("MIN")) {
             int relayIndex = message.substring(3, 4).toInt() - 1;
             int newMin = message.substring(5).toInt();
-            if (relayIndex >= 0 && relayIndex < 4 && newMin > 0 && newMin <= max_moisture[relayIndex]) {
-                min_moisture[relayIndex] = newMin;
-                // Serial.println("Cập nhật min_moisture[" + String(relayIndex) + "]: " + String(min_moisture[relayIndex]));
+            if (relayIndex >= 0 && relayIndex < 10 && newMin > 0 && newMin <= upper_limit[relayIndex]) {
+                lower_limit[relayIndex] = newMin;
+                // Serial.println("Cập nhật lower_limit[" + String(relayIndex) + "]: " + String(lower_limit[relayIndex]));
             }
         } else if (message.startsWith("MAX")) {
             int relayIndex = message.substring(3, 4).toInt() - 1;
             int newMax = message.substring(5).toInt();
-            if (relayIndex >= 0 && relayIndex < 4 && newMax > min_moisture[relayIndex] && newMax <= 100) {
-                max_moisture[relayIndex] = newMax;
-                // Serial.println("Cập nhật max_moisture[" + String(relayIndex) + "]: " + String(max_moisture[relayIndex]));
+            if (relayIndex >= 0 && relayIndex < 10 && newMax > lower_limit[relayIndex] && newMax <= 100) {
+                upper_limit[relayIndex] = newMax;
+                // Serial.println("Cập nhật upper_limit[" + String(relayIndex) + "]: " + String(upper_limit[relayIndex]));
             }
         } else if (message.startsWith("TM")) {
             int relayIndex = message.substring(2, 3).toInt() - 1;
             int newMaxTime = message.substring(4).toInt();
-            if (relayIndex >= 0 && relayIndex < 4 && newMaxTime > 0) {
+            if (relayIndex >= 0 && relayIndex < 10 && newMaxTime > 0) {
                 max_time[relayIndex] = newMaxTime;
                 // Serial.println("Cập nhật max_time[" + String(relayIndex) + "]: " + String(max_time[relayIndex]));
             }
+        } else if (message.startsWith("MT")) {
+            maxTemperature = message.substring(3).toInt();
         }else{
-            mqttMessage = message; // Lưu lại toàn bộ chuỗi nhận được
+            mqttMessage = message; // Lưu lại toàn bộ chuỗi nhận được, phục vụ cho hẹn giờ ở file khác
         }
     }
 }
 
 void connect_MQTT() {
+    // Thử kết nối MQTT
     if (!mqttClient.connected()) {
         Serial.print("Đang kết nối MQTT...");
-        if (mqttClient.connect("ESP8266Client", mqtt_user, mqtt_pass)) {
+        if (mqttClient.connect("ESP32Client", mqtt_user, mqtt_pass)) {
             mqtt_connected = true;
             // Serial.println("Đã kết nối MQTT!");
             mqttClient.subscribe(control_topic);
@@ -153,12 +166,13 @@ void connect_MQTT() {
             } else {
                 count_connect_wifi++;
             }
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 10; i++) {
                 isAuto[i] = true;
             }
         }
     }
 }
+
 
 void setupMQTT() {
     espClient.setInsecure();

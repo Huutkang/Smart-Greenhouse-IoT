@@ -1,5 +1,9 @@
 # Smart Greenhouse IoT System
 
+## Đặt bài toán
+Trong bối cảnh nhu cầu trồng rau hữu cơ ngày càng tăng, việc sử dụng nhà kính giúp tối ưu hóa việc trồng cây và bảo vệ cây trồng khỏi các yếu tố bên ngoài. Tuy nhiên, việc duy trì điều kiện môi trường lý tưởng trong nhà kính một cách thủ công rất tốn thời gian và công sức. Dự án này tự động hóa các quy trình như điều khiển ánh sáng, tưới nước và kiểm soát nhiệt độ trong nhà kính thông qua công nghệ IoT, giúp giảm thiểu công sức lao động và tiết kiệm tài nguyên.
+
+
 ## Mô tả dự án
 Dự án này xây dựng một hệ thống điều khiển thông minh cho nhà kính trồng cây, nhằm duy trì các yếu tố môi trường như ánh sáng, độ ẩm đất và nhiệt độ trong khoảng tối ưu. Hệ thống sử dụng **ESP32** làm vi điều khiển, các cảm biến môi trường để thu thập dữ liệu, và giao thức **MQTT** để trao đổi thông tin qua một broker online. Người dùng có thể theo dõi và điều khiển hệ thống từ xa thông qua giao diện **Node-RED Dashboard**.
 
@@ -35,9 +39,6 @@ Hệ thống được thiết kế với luồng thông tin như sau:
 
 ![Sơ đồ khối hệ thống](./diagram.png)
 
-## Đặt bài toán
-Trong bối cảnh nhu cầu trồng rau hữu cơ ngày càng tăng, việc sử dụng nhà kính giúp tối ưu hóa việc trồng cây và bảo vệ cây trồng khỏi các yếu tố bên ngoài. Tuy nhiên, việc duy trì điều kiện môi trường lý tưởng trong nhà kính một cách thủ công rất tốn thời gian và công sức. Dự án này tự động hóa các quy trình như điều khiển ánh sáng, tưới nước và kiểm soát nhiệt độ trong nhà kính thông qua công nghệ IoT, giúp giảm thiểu công sức lao động và tiết kiệm tài nguyên.
-
 ## Các bước triển khai
 
 ### 1. Kết nối phần cứng
@@ -71,5 +72,55 @@ Trong bối cảnh nhu cầu trồng rau hữu cơ ngày càng tăng, việc s�
 2. Tải chương trình lên ESP32.
 3. Thiết lập broker MQTT và giao diện Node-RED.
 4. Theo dõi và điều khiển hệ thống thông qua Node-RED Dashboard.
+
+---
+
+## Logic điều khiển hệ thống
+
+### 1. Logic tưới cây
+- Hệ thống hỗ trợ hai chế độ:
+  1. **Tự động**: 
+      - Người dùng có thể lập lịch tưới hàng ngày.
+      - Hệ thống tự động tưới cây khi độ ẩm đất dưới ngưỡng **min** và ngừng tưới khi độ ẩm vượt ngưỡng **max**.
+      - Trong khoảng giữa hai giá trị **min** và **max**, hệ thống tưới cây theo lịch cài đặt.
+      - Khi bật relay để tưới cây, thời gian tối đa được giới hạn bởi giá trị trong mảng `max_time[10]`.
+      - Relay sau khi tắt cần một khoảng thời gian chờ (`ActivationTime`) trước khi bật lại.
+  2. **Điều khiển bằng tay**:
+      - Người dùng bật relay thủ công, hệ thống sẽ tự động tắt sau khi hoàn thành tưới cây.
+      - Khi mất kết nối, hệ thống tự động chuyển về chế độ tưới tự động.
+
+### 2. Logic điều chỉnh ánh sáng
+- Điều chỉnh ánh sáng dựa trên cảm biến đo độ sáng (giá trị ADC chuyển đổi sang % từ 0 đến 100).
+- Với các cây trồng cần chiếu sáng theo lịch, hệ thống tuân thủ các giá trị **min** và **max** như sau:
+  - Bật đèn khi độ sáng dưới ngưỡng **min**.
+  - Tắt đèn khi độ sáng vượt ngưỡng **max**.
+  - Nếu độ sáng nằm giữa hai giá trị, đèn sẽ bật tắt theo lịch.
+
+### 3. Logic làm mát không khí
+- Quạt làm mát sẽ tự động bật khi nhiệt độ không khí vượt ngưỡng cài đặt.
+- Quạt tắt khi nhiệt độ giảm xuống dưới ngưỡng.
+- Nhiệt độ được cập nhật sau mỗi phút.
+
+## Cấu hình phần cứng và mở rộng
+- Sử dụng các chân ADC để kết nối với các cảm biến như:
+  - **Cảm biến ánh sáng.**
+  - **Cảm biến độ ẩm đất.**
+  - **Cảm biến nhiệt độ và độ ẩm không khí (DHT11).**
+- Kết nối với relay để điều khiển các thiết bị:
+  - **Đèn LED.**
+  - **Máy bơm nước.**
+  - **Quạt làm mát.**
+- Sử dụng thêm module **ADS1115** để mở rộng số lượng kênh ADC, đạt đến 10 cặp input-output.
+- Trong phiên bản demo, hệ thống sử dụng các thiết bị hoạt động ở điện áp ≤ 5V.
+
+### Sơ đồ chân
+- Chân DHT11: `GPIO 4`.
+- Mảng chân ADC: `{25, 32, 33, 34, 35, 36}`.
+- Mảng chân relay: `{2, 5, 14, 16, 17, 18, 19, 23, 27, 39, 26}`.
+
+## Tiềm năng mở rộng
+- Tích hợp thêm các cảm biến môi trường khác như CO2, độ mặn đất.
+- Cải thiện logic điều khiển dựa trên các thuật toán học máy.
+- Tích hợp thêm các tính năng giám sát và điều khiển từ xa qua ứng dụng di động.
 
 ---

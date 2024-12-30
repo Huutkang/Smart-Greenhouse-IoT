@@ -1,20 +1,13 @@
 #include <Arduino.h>
 #include "wifi_mqtt.h"
 #include "sensor.h"
-#include "irrigation.h"
+#include "control.h"
 #include "time_sync.h"
 
 
-// Đã được định nghĩa trong thư viện, không cần định nghĩa lại
-// const int SCL = 22; // esp32: D22, esp8288: D1
-// const int SDA = 21; // esp32: D21, esp8288: D2
 
-// Relay1. esp32: D32, esp8266: D4
-// Relay2. esp32: D33, esp8266: D5
-// Relay3. esp32: D26, esp8266: D6
-// Relay4. esp32: D25, esp8266: D7
-
-int RL[4] = {D4, D5, D6, D7};
+int ADC[6] = {25, 32, 33, 34, 35, 36};
+int RL[11] = {2, 5, 14, 16, 17, 18, 19, 23, 27, 39, 26};
 
 unsigned long current_time;
 unsigned long time1=0;
@@ -22,13 +15,15 @@ unsigned long time2=0;
 unsigned long time3=0;
 unsigned long time4=0;
 unsigned long time5=0;
+unsigned long time6=0;
 
-int t[4] = {max_time[0], max_time[1], max_time[2], max_time[3]};
+
+int t[10];
 int ActivationTime = 60;
 bool count_status[4] = {false, false, false, false};
 
 
-// với kiểu dữ liệu unsigned long: 10 - 4294967295 = 11 nên không lo tràn số ở hàm millis nhé
+// với kiểu dữ liệu unsigned long: 10 - 4294967295 = 11 nên không lo tràn số ở hàm millis
 int Timer(unsigned long *time, int wait){
     current_time = millis();
     if (current_time-*time>wait){
@@ -41,30 +36,30 @@ int Timer(unsigned long *time, int wait){
 }
 
 void updateStatus() {
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 10; i++) {
         if (!isAuto[i]) {
-            // Nếu không ở chế độ tự động, bỏ qua máy bơm này
+            // Nếu không ở chế độ tự động, bỏ qua relay này
             continue;
         }
         if (t[i]<0){
             status[i] = false;
         }
 
-        if (sensor[i] <= min_moisture[i]) {
+        if (sensor[i] <= lower_limit[i]) {
             if (!count_status[i]){
                 count_status[i] = true;
                 status[i] = true;
             }
-        } else if (sensor[i] >= max_moisture[i]) {
+        } else if (sensor[i] >= upper_limit[i]) {
             status[i] = false; // Không tưới
         } else {
             // Độ ẩm nằm trong khoảng 60-90
-            if (watering_timer[i]) {
+            if (timer_variable[i]) {
                 if (!count_status[i]){
                     count_status[i] = true;
                     status[i] = true;
                 }
-                watering_timer[i] = false; // Reset lại bộ hẹn giờ
+                timer_variable[i] = false; // Reset lại bộ hẹn giờ
             }
         }
     }
@@ -73,15 +68,16 @@ void updateStatus() {
 
 void setup() {
     Serial.begin(115200);
-    setupIrrigation(RL);          // Cấu hình hệ thống tưới cây
+    setupRelay(RL);          // Cấu hình hệ thống tưới cây
     initializeTimers();
     setupWiFi();                  // Cấu hình WiFi
     setupMQTT();                 // Cấu hình MQTT
-    setupSensors();       // Cấu hình cảm biến (ADC: ADS1115)
+    setupSensors(ADC);       // Cấu hình cảm biến (ADC: ADS1115)
     setupTimeSync();
 
-    // Ví dụ: Đặt hẹn giờ cho máy bơm 0 vào lúc 08:00:00
-    // SetWateringTimer(0, 0, 8 * 3600);
+    for (int i; i<10; i++){
+        t[i] = max_time[i];
+    }
 }
 
 
@@ -96,9 +92,16 @@ void setup() {
 //     nếu độ ẩm bé hơn min thì tưới cây, nếu độ ẩm lớn hơn max thì không tưới, 
 //     nếu độ ẩm nằm giữa min và max thì tưới theo lịch
 //     
-//     khi máy bơm được bật thì nó được tưới tối đa trong khoảng thời gian được lưu trong mảng max_time[4] (auto)
-//     khi máy bơm tắt thì nó phải chờ một khoảng thời gian là ActivationTime mới bật lên lại được (auto)
-//     logic trên được triển khải bằng ActivationTime, t[4], count_status[4]
+//     khi relay được bật thì nó được tưới tối đa trong khoảng thời gian được lưu trong mảng max_time[10] (auto)
+//     khi relay tắt thì nó phải chờ một khoảng thời gian là ActivationTime mới bật lên lại được (auto)
+//     logic trên được triển khải bằng ActivationTime, t[10], count_status[10]
+
+// logic điều chỉnh đổ sáng:
+//     Giống hệt logic tưới cây. ánh sáng đo độ sáng xong giá trị adc được chuyển về %. mức thấp nhất đo được ở môi trường tự nhiên ứng với 0%, mức cao nhất là 100%
+//     đối với những loại cây trồng cần lên lịch chiếu sáng thì nằm giữa 2 giá trị min, max thì bật tắt đèn theo lịch. nếu quá sáng thì thôi
+
+// logic làm mát không khí bằng quạt:
+//     Khi nhiệt độ không khí quá cao, hơn ngưỡng người dùng đặt thì quạt được bật. khi dưới ngưỡng thì tắt (cập nhật sau mỗi phút)
 
 
 void loop() {
@@ -109,7 +112,7 @@ void loop() {
         }
     }
     if (Timer(&time2,5000)){ // đọc, gửi, in giá trị cảm biến
-        readSensors();                
+        readSensorsADS1115();                
         for (int i = 0; i < 4; i++) {
             String message = String(i + 1) + " " + String(sensor[i]);
             publishData("RH", message.c_str());
@@ -117,12 +120,12 @@ void loop() {
         String pump_status = String(status[0]) + String(status[1]) + String(status[2]) + String(status[3]);
         publishData("PS", pump_status.c_str());
     }
-    if (Timer(&time3,500)){ // thực thi bật tắt máy bơm
-        manageIrrigation(RL, status);
+    if (Timer(&time3,500)){ // thực thi bật tắt relay
+        Serial.println(getCurrentTime());
     }
-    if (Timer(&time4,990)){ // thay đổi trạng thái
-        updateStatus(); // thay đổi trạng thái máy bơm
-        for (int i=0; i<4; i++){ // kiểm soát thời gian tưới tối đa và thời gian tối thiểu từ khi tắt đến khi bật (chế độ auto)
+    if (Timer(&time4,998)){ // thay đổi trạng thái
+        updateStatus(); // thay đổi trạng thái relay
+        for (int i=0; i<10; i++){ // kiểm soát thời gian tưới tối đa và thời gian tối thiểu từ khi tắt đến khi bật (chế độ auto)
             if (count_status[i]){
                 t[i]--; // bắt buộc để timer ở đây là 1 giây để hoạt động bình thường
             }
@@ -133,9 +136,14 @@ void loop() {
         }
     }
     if (Timer(&time5,991)){ // hẹn giờ
-        ProcessTimerString(mqttMessage); // hẹn giờ bơm
-        checkAndActivateTimers();  // kích hoạt các máy bơm đã hẹn giờ
+        ProcessTimerString(mqttMessage); // hẹn giờ hoạt động
+        checkAndActivateTimers();  // kích hoạt các relay đã hẹn giờ
     }
-    // Đồng bộ thời gian mỗi 15 phút
-    updateTimeSync();
+    if (Timer(&time6, 60000)){ // điều khiển quạt
+        if (temperature > maxTemperature){
+            digitalWrite(RL[10], LOW); // nhiệt độ quá cao thì bật quạt (maxTemperature do setup của người dùng)
+        }else{
+            digitalWrite(RL[10], HIGH); 
+        }
+    }
 }

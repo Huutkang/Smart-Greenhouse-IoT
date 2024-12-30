@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 
-extern bool watering_timer[4];
+extern bool timer_variable[10];
 
 
 // Khai báo hàm khởi tạo và các hàm cần thiết

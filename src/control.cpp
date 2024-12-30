@@ -3,15 +3,15 @@
 
 
 
-void setupIrrigation(int RL[4]) {
-    for (int i = 0; i < 4; i++) {
+void setupRelay(int RL[10]) {
+    for (int i = 0; i < 8; i++) {
         pinMode(RL[i], OUTPUT);
-        digitalWrite(RL[i], HIGH); // Tắt bơm ban đầu
+        digitalWrite(RL[i], HIGH); // Tắt relay ban đầu
     }
 }
 
-void manageIrrigation(int RL[4], bool status[4]) {
-    for (int i = 0; i < 4; i++) {
+void manageRelay(int RL[10], bool status[10]) {
+    for (int i = 0; i < 8; i++) {
         digitalWrite(RL[i], !status[i]);
     }
 }

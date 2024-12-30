@@ -1,116 +1,115 @@
-#include "time_sync.h"
-#include <ESP8266WiFi.h>
-#include <NTPClient.h>
-#include <WiFiUdp.h>
+#include <Arduino.h>
+#include <time.h>
 
 
+// Cấu hình NTP
+const char* ntpServer = "pool.ntp.org";
+const long gmtOffset_sec = 7 * 3600; // UTC+7
+const int daylightOffset_sec = 0;
 
-bool watering_timer[4] = {false, false, false, false};
+// Biến hẹn giờ
+bool timer_variable[10] = {false, false, false, false, false, false, false, false};
 
 struct Timer {
     unsigned long startTime; // Thời điểm kích hoạt (giây từ đầu ngày)
     bool isActive;           // Trạng thái của hẹn giờ (đang bật hay tắt)
 };
 
-Timer pumpTimers[4][4];
+Timer relayTimers[10][4];
 
-// Cấu hình NTP
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "pool.ntp.org", 7 * 3600, 900000); // UTC+7, cập nhật 15 phút một lần
-
+// Thiết lập thời gian từ NTP
 void setupTimeSync() {
-    timeClient.begin(); // Khởi động NTP Client
-    timeClient.update(); // Đồng bộ thời gian ngay khi khởi tạo
-}
-
-void updateTimeSync() {
-    timeClient.update(); // Cập nhật thời gian từ máy chủ NTP
+    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo)) {
+        Serial.println("Không thể đồng bộ thời gian từ NTP!");
+        return;
+    }
+    Serial.println("Đã đồng bộ thời gian từ NTP!");
 }
 
 // Lấy thời gian hiện tại ở dạng HH:MM:SS
 String getCurrentTime() {
-    return timeClient.getFormattedTime();
+    struct tm timeinfo;
+    if (getLocalTime(&timeinfo)) {
+        char buffer[9];
+        sprintf(buffer, "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+        return String(buffer);
+    } else {
+        return "00:00:00";
+    }
 }
 
 // Lấy số giây kể từ đầu ngày
 unsigned long getSecondsSinceMidnight() {
-    unsigned long epochTime = timeClient.getEpochTime(); // Lấy thời gian epoch (giây từ 01/01/1970)
-    return epochTime % 86400; // Lấy phần dư của số giây trong ngày (1 ngày = 86400 giây)
+    struct tm timeinfo;
+    if (getLocalTime(&timeinfo)) {
+        return timeinfo.tm_hour * 3600 + timeinfo.tm_min * 60 + timeinfo.tm_sec;
+    }
+    return 0;
 }
 
+// Khởi tạo tất cả các hẹn giờ là không hoạt động
 void initializeTimers() {
-    // Khởi tạo tất cả các hẹn giờ là không hoạt động
-    for (int pump = 0; pump < 4; pump++) {
+    for (int relay = 0; relay <10; relay++) {
         for (int timer = 0; timer < 4; timer++) {
-            pumpTimers[pump][timer].startTime = 0;
-            pumpTimers[pump][timer].isActive = false;
+            relayTimers[relay][timer].startTime = 0;
+            relayTimers[relay][timer].isActive = false;
         }
     }
 }
 
-void SetWateringTimer(int pumpIndex, int timerIndex, unsigned long startTimeInSeconds) {
-    if (pumpIndex < 0 || pumpIndex > 3 || timerIndex < 0 || timerIndex > 3) {
-        // Serial.println("Chỉ số máy bơm hoặc hẹn giờ không hợp lệ!");
-        return;
+// Đặt hẹn giờ cho máy bơm
+void SetWateringTimer(int relayIndex, int timerIndex, unsigned long startTimeInSeconds) {
+    if (relayIndex < 0 || relayIndex > 9 || timerIndex < 0 || timerIndex > 4) {
+        return; // Chỉ số không hợp lệ
     }
-    pumpTimers[pumpIndex][timerIndex].startTime = startTimeInSeconds;
-    pumpTimers[pumpIndex][timerIndex].isActive = true;
+    relayTimers[relayIndex][timerIndex].startTime = startTimeInSeconds;
+    relayTimers[relayIndex][timerIndex].isActive = true;
 }
 
+// Xử lý chuỗi hẹn giờ đầu vào
 void ProcessTimerString(String& input) {
-    // Kiểm tra độ dài chuỗi đầu vào
     if (input.length() < 3) {
         input = ""; // Xóa chuỗi sau khi xử lý
         return;
     }
 
-    // Lấy số đầu tiên (2 số pumpIndex và timerIndex)
-    int pumpIndex = input[0] - '0'; // Số đầu tiên
-    int timerIndex = input[1] - '0'; // Số thứ hai
+    int relayIndex = input[0] - '0';
+    int timerIndex = input[1] - '0';
 
-    // Kiểm tra tính hợp lệ của pumpIndex và timerIndex
-    if (pumpIndex < 0 || pumpIndex > 3 || timerIndex < 0 || timerIndex > 3) {
-        // Serial.println("Chỉ số máy bơm hoặc hẹn giờ không hợp lệ!");
+    if (relayIndex < 0 || relayIndex > 3 || timerIndex < 0 || timerIndex > 3) {
         input = ""; // Xóa chuỗi sau khi xử lý
         return;
     }
 
-    // Lấy phần còn lại sau khoảng trắng
     String remaining = input.substring(2);
-    remaining.trim(); // Loại bỏ khoảng trắng thừa
+    remaining.trim();
 
     if (remaining == "off") {
-        // Nếu chuỗi là "off", tắt bộ hẹn giờ
-        pumpTimers[pumpIndex][timerIndex].isActive = false;
-        // Serial.println("Đã tắt hẹn giờ cho máy bơm " + String(pumpIndex) + ", hẹn giờ " + String(timerIndex));
+        relayTimers[relayIndex][timerIndex].isActive = false;
     } else {
-        // Nếu chuỗi là số, chuyển đổi và gọi SetWateringTimer
         unsigned long startTimeInSeconds = remaining.toInt();
         if (startTimeInSeconds > 0) {
-            SetWateringTimer(pumpIndex, timerIndex, startTimeInSeconds);
-            // Serial.println("Đã đặt hẹn giờ cho máy bơm " + String(pumpIndex) + ", hẹn giờ " + String(timerIndex) + " vào " + String(startTimeInSeconds) + " giây.");
-        } else {
-            // Serial.println("Thời gian không hợp lệ!");
+            SetWateringTimer(relayIndex, timerIndex, startTimeInSeconds);
         }
     }
 
-    // Xóa chuỗi sau khi xử lý
-    input = "";
+    input = ""; // Xóa chuỗi sau khi xử lý
 }
 
-
+// Kiểm tra và kích hoạt các hẹn giờ
 void checkAndActivateTimers() {
     unsigned long currentSeconds = getSecondsSinceMidnight();
 
-    for (int pump = 0; pump < 4; pump++) {
+    for (int relay = 0; relay < 10; relay++) {
         for (int timer = 0; timer < 4; timer++) {
-            if (pumpTimers[pump][timer].isActive && // thời gian hiện tại phải lớn hơn thời gian hẹn giờ thì mới bật máy bơm
-                pumpTimers[pump][timer].startTime +60 > currentSeconds && // nhưng không được lớn hơn quá 1 phút, nếu không là hẹn giờ cho ngày hôm sau
-                currentSeconds >= pumpTimers[pump][timer].startTime) { // làm vậy để cho không bị lỗi là, bây giờ là 6 giờ, hẹn giờ là 1 giờ thì máy bơm bật luôn chứ không phải là 1 h hôm sau mới bật
+            if (relayTimers[relay][timer].isActive &&
+                relayTimers[relay][timer].startTime + 60 > currentSeconds &&
+                currentSeconds >= relayTimers[relay][timer].startTime) {
                 
-                // Kích hoạt hẹn giờ
-                watering_timer[pump] = true;
-                pumpTimers[pump][timer].isActive = false; // Vô hiệu hóa hẹn giờ sau khi kích hoạt
+                timer_variable[relay] = true;
+                relayTimers[relay][timer].isActive = false; // Vô hiệu hóa sau khi kích hoạt
             }
         }
     }
