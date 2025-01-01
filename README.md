@@ -121,17 +121,17 @@ Hệ thống được thiết kế với luồng thông tin như sau:
 
 ## Video demo
 
-[Test cảm biến](./test-cam-bien.mp4)
+[Test cảm biến](./data/video/test-cam-bien.mp4)
 
-[Download the video](./data/video/test-khoi-thuc-thi.mp4)
+[Test khối thực thi](./data/video/test-khoi-thuc-thi.mp4)
 
-[Download the video](./data/video/tinh-nang-tu-dong-chieu-sang.mp4)
+[Tính năng tự động chiếu sáng](./data/video/tinh-nang-tu-dong-chieu-sang.mp4)
 
-[Download the video](./data/video/tinh-nang-lam-mat.mp4)
+[Tính năng quạt làm mát](./data/video/tinh-nang-lam-mat.mp4)
 
-[Download the video](./data/video/tinh-nang-tu-dong-tuoi.mp4)
+[Tính năng tự động tưới](./data/video/tinh-nang-tu-dong-tuoi.mp4)
 
-[Download the video](./data/video/hen-gio.mp4)
+[Hẹn giờ](./data/video/hen-gio.mp4)
 ### Sơ đồ chân
 - Chân DHT11: `GPIO 4`.
 - Mảng chân ADC: `{25, 32, 33, 34, 35, 36}`.
