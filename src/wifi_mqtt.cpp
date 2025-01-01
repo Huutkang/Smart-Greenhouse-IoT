@@ -64,11 +64,11 @@ bool mqtt_connected = false;
 int count_connect_wifi = 0;
 int lower_limit[9] = {60, 60, 60, 60, 60, 60, 60, 60, 60}; // 9 cảm biến tối đa  (5 + 4 ads1115)
 int upper_limit[9] = {90, 90, 90, 90, 90, 90, 90, 90, 90};
-int maxTemperature;
+int maxTemperature = 40;
 int max_time[9] = {60, 60, 60, 60, 60, 60, 60, 60};
 
 int ssMin[9] = {-1, -1, -1, -1, -1, -1, -1, -1, -1}; // mảng đặt lại giá trị max, min cho cảm biến
-int ssMax[9] = {-1, -1, -1, -1, -1, -1, -1, -1, -1}; // chỉ dùng cho nhà phát triển, k dành cho người dùng phổ thông
+int ssMax[9] = {-1, -1, -1, -1, -1, -1, -1, -1, -1}; // chỉ dùng cho người lắp đặt sản phẩm, k dành cho người dùng phổ thông
 
 // Biến lưu trữ chuỗi MQTT nhận được
 String mqttMessage = "";
@@ -83,13 +83,14 @@ PubSubClient mqttClient(espClient);  // Đối tượng MQTT client
 
 void setupWiFi() {
     WiFiManager wifiManager;
-
+    wifiManager.setTimeout(300);
     // Tự động kết nối hoặc tạo Access Point
-    if (!wifiManager.autoConnect("ESP32_AP")) {
-        // Serial.println("Không kết nối được Wi-Fi");
-        delay(3000);
-        ESP.restart();  // Khởi động lại thiết bị
-    }
+    wifiManager.autoConnect("ESP32_AP");
+    // nếu không kết nối được wifi lúc khởi động thì sẽ tạo điểm truy cập cho người dùng nhập mật khẩu qua web của WiFiManager (khi di chuyển k phải nạp lại code)
+    // phát điểm truy cập ra tối đa 5 phút.
+    // sẽ có 2 trường hợp xảy ra. nếu người dùng di chuyển thiết bị từ nơi này đến nơi khác, mới mua về ... thì người dùng sẽ có 5 phút để nhập mật khẩu
+    // nếu trong trường hợp mất điện. cả wifi và thiết bị đều bị tắt và khởi động lại lúc có điện. thiết bị chưa kịp bắt wifi thì đã nhảy vào hàm phát wifi trên
+    // thì khi này set timeout 5 phút trên kia có tác dụng. thiết bị sẽ tự kết nối lại được wifi (trong hàm loop gọi hàm connect_MQTT -> WiFi.reconnect())
 }
 
 
@@ -103,41 +104,41 @@ void callback(char* topic, byte* payload, unsigned int length) {
         Serial.println(message);
         if (message.startsWith("ON")) {
             int relayIndex = message.substring(2).toInt();
-            if (relayIndex >= 0 && relayIndex < 9) {
+            if (relayIndex >= 0 && relayIndex < 10) {
                 isAuto[relayIndex] = false;
                 status[relayIndex] = true;
             }
         } else if (message.startsWith("OFF")) { // người dùng tắt relay số index
             int relayIndex = message.substring(3).toInt();
-            if (relayIndex >= 0 && relayIndex < 9) {
+            if (relayIndex >= 0 && relayIndex < 10) {
                 isAuto[relayIndex] = false;
                 status[relayIndex] = false;
             }
         } else if (message.startsWith("AUTO")) { // người dùng đặt chế độ auto cho relay số index
             int relayIndex = message.substring(4).toInt();
-            if (relayIndex >= 0 && relayIndex < 9) {
+            if (relayIndex >= 0 && relayIndex < 10) {
                 isAuto[relayIndex] = true;
                 status[relayIndex] = false;
             }
         }
     } else if (String(topic) == config_topic) {
-        if (message.startsWith("AC")) { // tính năng chỉ dùng cho nhà phát triển để bật tắt cấu hình lại cảm biến, relay
+        if (message.startsWith("AC")) { // tính năng chỉ dành cho người lắp đặt sản phẩm. để bật tắt cấu hình lại cảm biến, relay
             int index = message.substring(2, 3).toInt();
             int iAc = message.substring(4, 5).toInt();
             if (index >= 0 && index < 9) {
                 if (iAc == 1){
                     isActive[index] = true;
                 } else if (iAc == 0){
-                    isActive[index] = false;
+                    isActive[index] = false; // tắt cảm biến, relay ở vị trí tương ứng. thường là trong trường hợp thừa, không dùng hết số chân
                 }
             }
-        }else if (message.startsWith("ssmin")) { // giúp nhà phán triển chuẩn hóa lại giá trị cảm biến
+        }else if (message.startsWith("ssmin")) { // giúp người thiết lập, chuẩn hóa lại giá trị cảm biến
             int index = message.substring(5, 6).toInt();
             int newMin = message.substring(7).toInt();
             if (index >= 0 && index < 9) {
                 ssMin[index] = newMin;
             }
-        } else if (message.startsWith("ssmax")) { // giúp nhà phán triển chuẩn hóa lại giá trị cảm biến
+        } else if (message.startsWith("ssmax")) { // giúp người thiết lập, chuẩn hóa lại giá trị cảm biến
             int index = message.substring(5, 6).toInt();
             int newMax = message.substring(7).toInt();
             if (index >= 0 && index < 9) {

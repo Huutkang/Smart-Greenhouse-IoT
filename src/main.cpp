@@ -6,8 +6,8 @@
 
 
 
-int ADC[5] = {32, 33, 34, 35, 36}; // dùng làm input, 4 cái của ADS1115 nữa là 10. giao tiếp I2C
-int RL[10] = {2, 4, 5, 14, 17, 18, 19, 23, 27, 26}; // 10 cặp và chân ở vị trí số 10 RL[10] dành cho quạt
+int ADC[5] = {32, 33, 34, 35, 36}; // dùng làm input, 4 cái của ADS1115 nữa là 9. giao tiếp I2C
+int RL[10] = {2, 4, 5, 14, 17, 18, 19, 23, 27, 26}; // 9 cặp và chân ở vị trí số 9 RL[9] dành cho quạt
 
 unsigned long current_time;
 unsigned long time1=0;
@@ -15,12 +15,11 @@ unsigned long time2=0;
 unsigned long time3=0;
 unsigned long time4=0;
 unsigned long time5=0;
-unsigned long time6=0;
 
 
-int t[10];
+int t[9];
 int ActivationTime = 60; // thời gian chờ trước khi bật lại
-bool count_status[10] = {false, false, false, false, false, false, false, false, false, false};
+bool count_status[9] = {false, false, false, false, false, false, false, false, false};
 
 
 // với kiểu dữ liệu unsigned long: 10 - 4294967295 = 11 nên không lo tràn số ở hàm millis
@@ -52,14 +51,15 @@ void updateStatus() {
         }
 
         if (sensor[i] <= lower_limit[i]) {
-            if (!count_status[i]){
+            if (i>2){ // chỉ với tự động tưới. relay máy bơm từ 3 đến 8
+                if (!count_status[i]){
                 count_status[i] = true;
                 status[i] = true;
             }
+            }
         } else if (sensor[i] >= upper_limit[i]) {
-            status[i] = false; // Không tưới
+            status[i] = false; // Không tưới, chiếu sáng
         } else {
-            // Độ ẩm nằm trong khoảng 60-90
             if (timer_variable[i]) {
                 if (!count_status[i]){
                     count_status[i] = true;
@@ -87,8 +87,8 @@ void updateStatus() {
 }
 
 void config_sensor(){  // tính năng dành cho nhà phát triển. người dùng k dùng đến
-    for (int i = 0; i <9; i++) {
-        if (ssMin[i] >=0){
+    for (int i = 0; i < 9; i++) {
+        if (ssMin[i] >= 0){
             sensorMin[i] = ssMin[i];
             ssMin[i] = -1;
         }
@@ -101,14 +101,14 @@ void config_sensor(){  // tính năng dành cho nhà phát triển. người dù
 
 void setup() {
     Serial.begin(115200);
-    setupRelay(RL);          // Cấu hình hệ thống tưới cây
+    setupRelay(RL);
     initializeTimers();
     setupWiFi();                  // Cấu hình WiFi
     setupMQTT();                 // Cấu hình MQTT
-    setupSensors(ADC);       // Cấu hình cảm biến (ADC: ADS1115)
+    setupSensors(ADC);       // Cấu hình cảm biến
     setupTimeSync();
 
-    for (int i; i<10; i++){
+    for (int i; i<9; i++){
         t[i] = max_time[i];
     }
 }
@@ -139,25 +139,26 @@ void setup() {
 
 void loop() {
     handleMQTT();                 // Xử lý kết nối MQTT
-    if (Timer(&time1, 3000)){ // kết nối lại mqtt, wifi
+    if (Timer(&time1, 3000)){ // kết nối lại mqtt, wifi (mếu mất kết nối)
         if(!mqtt_connected){
             connect_MQTT();
         }
     }
     if (Timer(&time2,5000)){ // đọc, gửi, in giá trị cảm biến
         readSensor();                
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 9; i++) {
             if (!isActive[i]){
                 continue;
             }
-            String message = String(i + 1) + " " + String(sensor[i]);
-            publishData("value", message.c_str());
+            String message = String(sensor[i]);
+            String ss = "ss"+String(i);
+            publishData(ss.c_str(), message.c_str());
         }
-        String device_status;
+        String relay_status;
         for (int i=0; i<10; i++){
-            device_status += String(status[i]); // trạng thái thiết bị. bật hay tắt
+            relay_status += String(status[i]); // trạng thái relay. bật hay tắt
         }
-        publishData("PS", device_status.c_str());
+        publishData("PS", relay_status.c_str());
         config_sensor();
         if (DHT11_connected){
             if (isnan(humidity) || isnan(temperature)) {
@@ -170,13 +171,13 @@ void loop() {
     }
     if (Timer(&time3,500)){ // thực thi bật tắt relay
         manageRelay(RL, status);
-        for (int i=0; i<10; i++){
-            Serial.println(status[i]);
-        }
+        // for (int i=0; i<10; i++){
+        //     Serial.println(status[i]);
+        // }
     }
     if (Timer(&time4,998)){ // thay đổi trạng thái
         updateStatus(); // thay đổi trạng thái relay
-        for (int i=0; i<10; i++){ // kiểm soát thời gian tưới tối đa và thời gian tối thiểu từ khi tắt đến khi bật (chế độ auto)
+        for (int i=0; i<9; i++){ // kiểm soát thời gian tưới tối đa và thời gian tối thiểu từ khi tắt đến khi bật (chế độ auto)
             if (count_status[i]){
                 t[i]--; // bắt buộc để timer ở đây là 1 giây để hoạt động bình thường
             }

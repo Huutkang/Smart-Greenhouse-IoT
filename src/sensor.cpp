@@ -26,15 +26,15 @@ float temperature;
 int arr_ADC[5];
 
 // mảng lưu giá trị của cảm biến chuyển về dạng %
-float sensor[10] = {100, 100, 100, 100, 100, 100, 100, 100, 100, 100};
+float sensor[9] = {100, 100, 100, 100, 100, 100, 100, 100, 100};
 
 // giá trị đo max của cảm biến ở môi trường thực tế (cần test trước để hiệu chỉnh). 4 cái sau là của ADS1115_WE
-float sensorMax[10] = {2760, 2680, 4095, 4095, 4095, 4095, 32767, 32767, 32767, 32767};
+float sensorMax[9] = {2760, 2680, 4095, 4095, 4095, 32767, 32767, 32767, 32767};
 // giá trị đo min của cảm biến ở môi trường thực tế (cần test trước để hiệu chỉnh). hiện tại mới dùng 2 cái đầu tiên cho ánh sáng và độ ẩm đất
-float sensorMin[10] = {1460, 1210, 0, 0, 0, 0, 0, 0, 0, 0};
+float sensorMin[9] = {1460, 1210, 0, 0, 0, 0, 0, 0, 0};
 
 
-// có 10 cảm biến là 6 chân ADC được chọn trên esp32 và 4 chân bổ sung từ ADS1115_WE.
+// có 9 cảm biến là 5 chân ADC được chọn trên esp32 và 4 chân bổ sung từ ADS1115_WE.
 // ADS1115_WE dành cho những việc đo giá trị có khoảng cách min->max nhỏ hơn nhiều so với thang đo. hoặc đo ở khoảng cách xa và gửi dữ liệu về
 
 // Khởi tạo các cảm biến
@@ -74,23 +74,22 @@ void readSensorsADS1115() {
     reading[3] = readChannel(ADS1115_COMP_3_GND);
 
     // Chuyển đổi thành phần trăm, lọc và ràng buộc giá trị
-    for (int i = 0; i < 4; i++) {
-        reading[i] = map(reading[i], sensorMax[i], sensorMin[i], 0, 100);
-        sensor[i] = constrain(reading[i], 0, 100);
+    for (int i = 5; i < 9; i++) {
+        reading[i-5] = map(reading[i-5], sensorMax[i], sensorMin[i], 0, 100);
+        sensor[i] = constrain(reading[i-5], 0, 100);
     }
-
 }
 
 void readLightSensor(int pin) {
     int adcValue = analogRead(arr_ADC[pin]);
     int value = map(adcValue, sensorMax[pin], sensorMin[pin], 100, 0);
-    sensor[0] = constrain(value, 0, 100);
+    sensor[pin] = constrain(value, 0, 100);
 }
 
 void readSoilMoisture(int pin) {
     int adcValue = analogRead(arr_ADC[pin]);
     int value = map(adcValue, sensorMax[pin], sensorMin[pin], 0, 100);
-    sensor[0] = constrain(value, 0, 100);
+    sensor[pin] = constrain(value, 0, 100);
 }
 
 void readSensor() {

@@ -113,6 +113,12 @@ Hệ thống được thiết kế với luồng thông tin như sau:
 - Sử dụng thêm module **ADS1115** để mở rộng số lượng kênh ADC, đạt đến 10 cặp input-output.
 - Trong phiên bản demo, hệ thống sử dụng các thiết bị hoạt động ở điện áp ≤ 5V.
 
+### Ảnh Node-RED
+
+![Chiếu sáng](./data/images/light.png)
+![Độ ẩm đất, tưới cây](./data/images/Soil-moisture-watering-plants.png)
+![Sơ đồ khối hệ thống](./data/images/temperature-air-humidity.png)
+
 ### Sơ đồ chân
 - Chân DHT11: `GPIO 4`.
 - Mảng chân ADC: `{25, 32, 33, 34, 35, 36}`.

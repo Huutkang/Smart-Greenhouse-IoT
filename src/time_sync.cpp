@@ -8,14 +8,14 @@ const long gmtOffset_sec = 7 * 3600; // UTC+7
 const int daylightOffset_sec = 0;
 
 // Biến hẹn giờ
-bool timer_variable[10] = {false, false, false, false, false, false, false, false};
+bool timer_variable[9] = {false, false, false, false, false, false, false, false, false};
 
 struct Timer {
     unsigned long startTime; // Thời điểm kích hoạt (giây từ đầu ngày)
     bool isActive;           // Trạng thái của hẹn giờ (đang bật hay tắt)
 };
 
-Timer relayTimers[10][4];
+Timer relayTimers[9][4];
 
 // Thiết lập thời gian từ NTP
 void setupTimeSync() {
@@ -51,7 +51,7 @@ unsigned long getSecondsSinceMidnight() {
 
 // Khởi tạo tất cả các hẹn giờ là không hoạt động
 void initializeTimers() {
-    for (int relay = 0; relay <10; relay++) {
+    for (int relay = 0; relay <9; relay++) {
         for (int timer = 0; timer < 4; timer++) {
             relayTimers[relay][timer].startTime = 0;
             relayTimers[relay][timer].isActive = false;
@@ -61,7 +61,7 @@ void initializeTimers() {
 
 // Đặt hẹn giờ cho máy bơm
 void SetWateringTimer(int relayIndex, int timerIndex, unsigned long startTimeInSeconds) {
-    if (relayIndex < 0 || relayIndex > 9 || timerIndex < 0 || timerIndex > 4) {
+    if (relayIndex < 0 || relayIndex > 8 || timerIndex < 0 || timerIndex > 4) {
         return; // Chỉ số không hợp lệ
     }
     relayTimers[relayIndex][timerIndex].startTime = startTimeInSeconds;
@@ -102,7 +102,7 @@ void ProcessTimerString(String& input) {
 void checkAndActivateTimers() {
     unsigned long currentSeconds = getSecondsSinceMidnight();
 
-    for (int relay = 0; relay < 10; relay++) {
+    for (int relay = 0; relay < 9; relay++) {
         for (int timer = 0; timer < 4; timer++) {
             if (relayTimers[relay][timer].isActive &&
                 relayTimers[relay][timer].startTime + 60 > currentSeconds &&

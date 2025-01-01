@@ -1,0 +1,91 @@
+message     topic       describe
+
+
+GỬI DỮ LIỆU VỀ:
+
+ON0	        control     bật relay 0
+ON1	        control     bật relay 1
+ON2	        control     bật relay 2
+ON3	        control     bật relay 3
+ON4	        control     bật relay 4
+ON5	        control     bật relay 5
+ON6	        control     bật relay 6
+ON7	        control     bật relay 7
+ON8	        control     bật relay 8
+ON9	        control     bật relay 9
+
+OFF0	    control     tắt relay 0
+OFF1	    control     tắt relay 1
+OFF2	    control     tắt relay 2
+OFF3	    control     tắt relay 3
+OFF4	    control     tắt relay 4
+OFF5	    control     tắt relay 5
+OFF6	    control     tắt relay 6
+OFF7	    control     tắt relay 7
+OFF8	    control     tắt relay 8
+OFF9	    control     tắt relay 9
+
+AUTO0	    control     đặt relay 0 là tự động
+AUTO1	    control     đặt relay 1 là tự động
+AUTO2	    control     đặt relay 2 là tự động
+AUTO3	    control     đặt relay 3 là tự động
+AUTO4	    control     đặt relay 4 là tự động
+AUTO5	    control     đặt relay 5 là tự động
+AUTO6	    control     đặt relay 6 là tự động
+AUTO7	    control     đặt relay 7 là tự động
+AUTO8	    control     đặt relay 8 là tự động
+AUTO9	    control     đặt relay 9 là tự động
+
+MIN0 55	    config      đặt giới hạn dưới của giá trị ADC1 (adc chuyển sang %) là 55
+MIN1 56	    config      đặt giới hạn dưới là ...
+MIN2 56	    config      đặt giới hạn dưới là ...
+MIN3 56	    config      đặt giới hạn dưới là ...
+MIN4 56	    config      đặt giới hạn dưới là ...
+MIN5 56	    config      đặt giới hạn dưới là ...
+MIN6 56	    config      đặt giới hạn dưới là ...
+MIN7 56	    config      đặt giới hạn dưới là ...
+MIN8 57	    config      đặt giới hạn dưới là ...
+
+MAX0 90	    config      đặt giới hạn trên là ...
+MAX1 90	    config      đặt giới hạn trên là ...
+MAX2 90	    config      đặt giới hạn trên là ...
+MAX3 90	    config      đặt giới hạn trên là ...
+MAX4 90	    config      đặt giới hạn trên là ...
+MAX5 90	    config      đặt giới hạn trên là ...
+MAX6 90	    config      đặt giới hạn trên là ...
+MAX7 90	    config      đặt giới hạn trên là ...
+MAX8 90	    config      đặt giới hạn trên là ...
+
+23 off	    config      tắt bộ hẹn giờ số 3 của relay 2. có tổng cộng 9*4 = 36 bộ hẹn giờ như thế này.
+
+41 28800	config      hẹn giờ bộ hẹn giờ số 1 (thứ 2) của relay thứ 4 là 28880. 28880 là số giây từ đầu ngày tương ứng với hẹn giờ lúc 8h sáng để bật relay. có tổng cộng 36 dòng như thế này nếu viết hết các trường hợp
+
+TM0 60	    config      thời gian tối đa thiết bị được bật. ví dụ relay trên là số 4. được bật lúc 8h sáng thì nó có 60 giây tối đa để hoạt động rồi tắt. có thể dùng để hẹn giờ khoảng thời gian như bật đèn lúc 7h tối và tắt lúc 5h sáng chẳng hạn. áp dụng cho các relay từ 0 đến 8
+
+MT 40       config      đặt ngưỡng trên của nhiệt độ là 40. trên ngưỡng này thì bật quạt nếu chế độ đang là auto
+
+ssmin1 1234  config      đặt lại giá trị dưới của giá trị adc. giá trị này sẽ map về 0%. chỉ dùng cho người thiết đặt hệ thông. k dành cho người dùng phổ thông
+
+ssmax0 2345  config      giống ssmin. 0 là ADC số 0. chỉ số từ adc 0 tới adc 8
+
+GỬI DỮ LIỆU LÊN:
+
+0 'tin nhắn'	noti    tin nhắn cho thiết bị (relay) số 0 gửi lên.
+1 'tin nhắn'	noti    tin nhắn cho thiết bị (relay) số 1 gửi lên.
+2 'tin nhắn'	noti    tin nhắn cho thiết bị (relay) số 2 gửi lên.
+3 'tin nhắn'	noti    tin nhắn cho thiết bị (relay) số 3 gửi lên.
+4 'tin nhắn'	noti    tin nhắn cho thiết bị (relay) số 4 gửi lên.
+5 'tin nhắn'	noti    tin nhắn cho thiết bị (relay) số 5 gửi lên.
+6 'tin nhắn'	noti    tin nhắn cho thiết bị (relay) số 6 gửi lên.
+7 'tin nhắn'	noti    tin nhắn cho thiết bị (relay) số 7 gửi lên.
+8 'tin nhắn'	noti    tin nhắn cho thiết bị (relay) số 8 gửi lên.
+9 'tin nhắn'	noti    tin nhắn cho thiết bị (relay) số 9 gửi lên.
+    
+67              ss0         giá trị trong mảng sensor. ở đây là 67% của cảm biến adc số 0.
+35              ss1         tương tự trên. có từ ss0 đến ss8
+
+45              h           độ ẩm là 45 %
+23              t           nhiệt độ là 23 độ C
+
+100101011	    PS          trạng thái bật tắt của thiết bị (relay). relay số 0 đang bật, 1 tắt, 2 tắt, 3 bật ...
+

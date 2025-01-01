@@ -2,13 +2,13 @@
 #define SENSOR_H
 
 
-extern float sensor[10];
+extern float sensor[9];
 extern bool ADS1115_connected;
 extern bool DHT11_connected;
 extern float temperature;
 extern float humidity;
-extern float sensorMax[10];
-extern float sensorMin[10];
+extern float sensorMax[9];
+extern float sensorMin[9];
 
 void setupSensors(int ADC[5]);
 void readSensorsADS1115();
