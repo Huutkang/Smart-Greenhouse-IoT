@@ -1,5 +1,7 @@
 # Smart Greenhouse IoT System
 
+(Bài giữa kì em để ở branch main, vì ban đầu em tạo ra repo là dùng cho bài giữa kì)
+
 ## Đặt bài toán
 Trong bối cảnh nhu cầu trồng rau hữu cơ ngày càng tăng, việc sử dụng nhà kính giúp tối ưu hóa việc trồng cây và bảo vệ cây trồng khỏi các yếu tố bên ngoài. Tuy nhiên, việc duy trì điều kiện môi trường lý tưởng trong nhà kính một cách thủ công rất tốn thời gian và công sức. Dự án này tự động hóa các quy trình như điều khiển ánh sáng, tưới nước và kiểm soát nhiệt độ trong nhà kính thông qua công nghệ IoT, giúp giảm thiểu công sức lao động và tiết kiệm tài nguyên.
 
@@ -83,23 +85,30 @@ Hệ thống được thiết kế với luồng thông tin như sau:
       - Người dùng có thể lập lịch tưới hàng ngày.
       - Hệ thống tự động tưới cây khi độ ẩm đất dưới ngưỡng **min** và ngừng tưới khi độ ẩm vượt ngưỡng **max**.
       - Trong khoảng giữa hai giá trị **min** và **max**, hệ thống tưới cây theo lịch cài đặt.
-      - Khi bật relay để tưới cây, thời gian tối đa được giới hạn bởi giá trị trong mảng `max_time[10]`.
-      - Relay sau khi tắt cần một khoảng thời gian chờ (`ActivationTime`) trước khi bật lại.
+      - Khi bật relay để tưới cây, thời gian tối đa được giới hạn bởi giá trị trong mảng `max_time[9]` (hẹn giờ tưới tối đa).
+      - Relay sau khi tắt cần một khoảng thời gian chờ (`ActivationTime`) trước khi bật lại (tránh trường hợp bật tắt liên tục trong một khoảng thời gian ngắn gây hỏng thiết bị).
   2. **Điều khiển bằng tay**:
-      - Người dùng bật relay thủ công, hệ thống sẽ tự động tắt sau khi hoàn thành tưới cây.
+      - Người dùng bật relay thủ công, thì phải tự tắt đi, hoặc chuyển sang chế độ auto để hệ thống tự động.
       - Khi mất kết nối, hệ thống tự động chuyển về chế độ tưới tự động.
 
 ### 2. Logic điều chỉnh ánh sáng
 - Điều chỉnh ánh sáng dựa trên cảm biến đo độ sáng (giá trị ADC chuyển đổi sang % từ 0 đến 100).
-- Với các cây trồng cần chiếu sáng theo lịch, hệ thống tuân thủ các giá trị **min** và **max** như sau:
-  - Bật đèn khi độ sáng dưới ngưỡng **min**.
-  - Tắt đèn khi độ sáng vượt ngưỡng **max**.
-  - Nếu độ sáng nằm giữa hai giá trị, đèn sẽ bật tắt theo lịch.
+  1. **Tự động**: 
+    - Với các cây trồng cần chiếu sáng theo lịch, hệ thống tuân thủ các giá trị **min** và **max** như sau:
+      - Bật đèn theo lịch khi độ sáng  từ 0 đến max (tính theo thang đo %. với max là giá trị lớn nhất đo được ngoài môi trường).
+      - Tắt đèn khi độ sáng vượt ngưỡng **max**.
+  2. **Điều khiển bằng tay**:
+        - Người dùng bật relay thủ công, thì phải tự tắt đi, hoặc chuyển sang chế độ auto để hệ thống tự động.
+        - Khi mất kết nối, hệ thống tự động chuyển về chế độ tưới tự động.
 
 ### 3. Logic làm mát không khí
-- Quạt làm mát sẽ tự động bật khi nhiệt độ không khí vượt ngưỡng cài đặt.
-- Quạt tắt khi nhiệt độ giảm xuống dưới ngưỡng.
-- Nhiệt độ được cập nhật sau mỗi phút.
+  1. **Tự động**: 
+    - Quạt làm mát sẽ tự động bật khi nhiệt độ không khí vượt ngưỡng cài đặt.
+    - Quạt tắt khi nhiệt độ giảm xuống dưới ngưỡng.
+    - Nhiệt độ được cập nhật sau mỗi phút.
+  2. **Điều khiển bằng tay**:
+          - Người dùng bật relay thủ công, thì phải tự tắt đi, hoặc chuyển sang chế độ auto để hệ thống tự động.
+          - Khi mất kết nối, hệ thống tự động chuyển về chế độ tưới tự động.
 
 ## Cấu hình phần cứng và mở rộng
 - Sử dụng các chân ADC để kết nối với các cảm biến như:
@@ -110,8 +119,8 @@ Hệ thống được thiết kế với luồng thông tin như sau:
   - **Đèn LED.**
   - **Máy bơm nước.**
   - **Quạt làm mát.**
-- Sử dụng thêm module **ADS1115** để mở rộng số lượng kênh ADC, đạt đến 10 cặp input-output.
-- Trong phiên bản demo, hệ thống sử dụng các thiết bị hoạt động ở điện áp ≤ 5V.
+- Sử dụng thêm module **ADS1115** để mở rộng số lượng kênh ADC, đạt đến 9 cặp input-output, nếu k dùng cặp nào, hoàn toàn có thể tắt đi.
+- Trong phiên bản demo, hệ thống sử dụng các thiết bị hoạt động ở điện áp ≤ 5V, khi triển khai thực tế, điện áp khối thực thi cần đảm bảo đúng với điện áp hoạt động của các thiết bị thực thi (thường là 220V).
 
 ### Ảnh Node-RED
 
@@ -132,14 +141,33 @@ Hệ thống được thiết kế với luồng thông tin như sau:
 [Tính năng tự động tưới](./data/video/tinh-nang-tu-dong-tuoi.mp4)
 
 [Hẹn giờ](./data/video/hen-gio.mp4)
+- Phía trên em chỉ demo được một số tính năng. đang còn nhiều tính năng nữa.
+
 ### Sơ đồ chân
-- Chân DHT11: `GPIO 4`.
-- Mảng chân ADC: `{25, 32, 33, 34, 35, 36}`.
-- Mảng chân relay: `{2, 5, 14, 16, 17, 18, 19, 23, 27, 39, 26}`.
+- Chân DHT11: `GPIO 16`.
+- Mảng chân ADC: `{32, 33, 34, 35, 36}`.
+- Mảng chân relay: `{14, 4, 5, 27, 17, 18, 19, 23, 2, 26}`.
+- Chân kết nối với ADS1115: `SCL, SDA`.
+
+## Ưu điểm của hệ thống
+- Hệ thống hoàn toàn không dùng delay, giúp tránh được lãng phí tài nguyền cpu, xử dụng tính năng hẹn giờ để chạy các hàm được lên lịch sẵn bằng hàm Timer tự phát triển.
+- Dễ dàng phát triển thêm mà không cần nạp lại code. hệ thống có 9 cặp input, output để dễ mở rộng, không cần nạp lại code sau khi đã triển khai sản phẩm, mà có thể code thêm ở máy chủ từ xa (máy chủ nhận thông tin input, xử lí, điều khiển thông qua lệnh) vì khi đã bán sản phẩm thì rất khó để đến tận nơi để nạp code.
+- Kết nối wifi thông minh. không nạp mật khẩu wifi vào phần mềm, vì khi thay đổi wifi hay di chuyển sang nơi khác hay khi người dùng mua mới thì rất bất tiện. thay vào đó sẽ có cơ chế kết nối thông minh. khi hệ thông k kết nối được với điểm wifi cũ (hoặc mới mua) hệ thống sẽ phát ra điểm truy cập wifi cho người dùng nhập thông tin wifi vào, sau đó sẽ kết nối wifi. người dùng sẽ có tối đa 5 phút để nhập mật khẩu wifi từ khi khởi động, nếu quá 5 phút, hệ thống sẽ ngừng phát wifi và cố gắng kết nối lại điểm wifi cũ. mục đính của phương pháp set timeout này là đề phòng khi mất điện, wifi và hệ thống này cùng được khởi động lại, và khi hệ thống chưa tìm được wifi thì sẽ phát wifi cho người dùng nhập vào (mãi mãi) khiến hệ thống k kết nối được wifi(trường hợp này k có tương tác của người dùng).
+- Có thể thay đổi các thông số cảm biến. set lại giá trị min, max của cảm biến để map sang giá trị %. min -> 0% max -> 100%. ví dụ cảm biến độ ẩm đất: cảm biến điện trở sẽ có dải tín hiệu ADC trả về rộng hơn so với điện rung.
+
+## Thông tin thêm
+- message giao tiếp được ghi trong file message
+- các thông tin về logic lập trình được ghi dưới dạng comment trong code.
 
 ## Tiềm năng mở rộng
 - Tích hợp thêm các cảm biến môi trường khác như CO2, độ mặn đất.
 - Cải thiện logic điều khiển dựa trên các thuật toán học máy.
 - Tích hợp thêm các tính năng giám sát và điều khiển từ xa qua ứng dụng di động.
 
+## Kết luận
+Sau quá trình nghiên cứu và phát triển, dự án hệ thống nhà kính thông minh dựa trên công nghệ IoT đã hoàn thành với nhiều tính năng đáp ứng được yêu cầu ban đầu. Hệ thống cho thấy khả năng tự động hóa các quy trình kiểm soát môi trường như chiếu sáng, tưới nước, và làm mát, đồng thời cung cấp một giao diện trực quan để người dùng có thể dễ dàng theo dõi và điều khiển từ xa.
+
+Việc triển khai các công nghệ như ESP32, giao thức MQTT, và Node-RED không chỉ giúp tối ưu hóa nguồn tài nguyên mà còn tạo nền tảng cho những ứng dụng IoT tiên tiến hơn trong tương lai.
+
+Dự án không chỉ giúp tiết kiệm thời gian và công sức trong quản lý nhà kính mà còn mở ra tiềm năng mở rộng, tích hợp thêm nhiều tính năng và cảm biến khác. Những kết quả đạt được khẳng định tầm quan trọng và hiệu quả của việc áp dụng công nghệ IoT vào lĩnh vực nông nghiệp thông minh.
 ---

@@ -51,12 +51,12 @@ void updateStatus() {
         }
 
         if (sensor[i] <= lower_limit[i]) {
-            // if (i>2){ // chỉ với tự động tưới. relay máy bơm từ 3 đến 8
+            if (i>2){ // chỉ với tự động tưới. relay máy bơm từ 3 đến 8
                 if (!count_status[i]){
                     count_status[i] = true;
                     status[i] = true;
                 }
-            // }
+            }
         } else if (sensor[i] >= upper_limit[i]) {
             status[i] = false; // Không tưới, chiếu sáng
         } else {

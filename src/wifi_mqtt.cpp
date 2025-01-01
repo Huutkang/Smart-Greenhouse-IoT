@@ -53,7 +53,7 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 )~~~";
 
 
-bool isActive[10] = {true, true, true, true, true, true, true, true, true, true}; //  trong bản demo dùng 2 cảm biến ánh sáng và nhiệt độ nên các cái khác được tắt đi
+bool isActive[10] = {true, false, false, true, false, false, false, false, false, true}; //  trong bản demo dùng 2 cảm biến ánh sáng và nhiệt độ nên các cái khác được tắt đi
 
 bool isAuto[10] = {true, true, true, true, true, true, true, true, true, true};  // true: AUTO, false: not AUTO.
 
