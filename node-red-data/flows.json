@@ -446,7 +446,7 @@
         "ymax": "100",
         "removeOlder": 1,
         "removeOlderPoints": "",
-        "removeOlderUnit": "60",
+        "removeOlderUnit": "86400",
         "cutout": 0,
         "useOneColor": false,
         "useUTC": false,
@@ -1687,7 +1687,7 @@
         "ymax": "100",
         "removeOlder": 1,
         "removeOlderPoints": "",
-        "removeOlderUnit": "60",
+        "removeOlderUnit": "86400",
         "cutout": 0,
         "useOneColor": false,
         "useUTC": false,
@@ -2965,7 +2965,7 @@
         "height": 0,
         "gtype": "gage",
         "title": "Độ ẩm không khí (%)",
-        "label": "units",
+        "label": "độ ẩm (%)",
         "format": "{{value}}",
         "min": 0,
         "max": "100",
@@ -3002,7 +3002,7 @@
         "ymax": "100",
         "removeOlder": 1,
         "removeOlderPoints": "",
-        "removeOlderUnit": "60",
+        "removeOlderUnit": "86400",
         "cutout": 0,
         "useOneColor": false,
         "useUTC": false,
@@ -3059,7 +3059,7 @@
         "height": 0,
         "gtype": "gage",
         "title": "Nhiệt độ không khí (%)",
-        "label": "units",
+        "label": "nhiệt độ (C)",
         "format": "{{value}}",
         "min": 0,
         "max": "100",
@@ -3096,7 +3096,7 @@
         "ymax": "100",
         "removeOlder": 1,
         "removeOlderPoints": "",
-        "removeOlderUnit": "60",
+        "removeOlderUnit": "86400",
         "cutout": 0,
         "useOneColor": false,
         "useUTC": false,
@@ -3163,7 +3163,7 @@
         "expiry": "",
         "broker": "9c7d7680003ca634",
         "x": 530,
-        "y": 520,
+        "y": 500,
         "wires": []
     },
     {
@@ -3188,6 +3188,96 @@
         "topicType": "msg",
         "x": 220,
         "y": 540,
+        "wires": [
+            [
+                "4d08d0cabc18d629"
+            ]
+        ]
+    },
+    {
+        "id": "1e6403077efdf4e3",
+        "type": "ui_text",
+        "z": "33de85e905112eed",
+        "group": "9e89d75a4a8867aa",
+        "order": 7,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Trạng thái quạt",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 480,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "d1f9fc1cfb9563e6",
+        "type": "function",
+        "z": "33de85e905112eed",
+        "name": "function 2",
+        "func": "const payloadStr = String(msg.payload).trim();\nif (payloadStr[9] === '1') {\n    msg.payload = \"bật\";\n} else {\n    msg.payload = \"tắt\";\n}\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 660,
+        "wires": [
+            [
+                "1e6403077efdf4e3"
+            ]
+        ]
+    },
+    {
+        "id": "ad72beebece19c77",
+        "type": "mqtt in",
+        "z": "33de85e905112eed",
+        "name": "",
+        "topic": "PS",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "9c7d7680003ca634",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 170,
+        "y": 660,
+        "wires": [
+            [
+                "d1f9fc1cfb9563e6"
+            ]
+        ]
+    },
+    {
+        "id": "ce53b300d206b36e",
+        "type": "ui_button",
+        "z": "33de85e905112eed",
+        "name": "",
+        "group": "9e89d75a4a8867aa",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Tự động",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "{{msg.auto}}",
+        "className": "",
+        "icon": "",
+        "payload": "AUTO9",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 220,
+        "y": 460,
         "wires": [
             [
                 "4d08d0cabc18d629"

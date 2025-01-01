@@ -29,9 +29,9 @@ int arr_ADC[5];
 float sensor[9] = {100, 100, 100, 100, 100, 100, 100, 100, 100};
 
 // giá trị đo max của cảm biến ở môi trường thực tế (cần test trước để hiệu chỉnh). 4 cái sau là của ADS1115_WE
-float sensorMax[9] = {2760, 2680, 4095, 4095, 4095, 32767, 32767, 32767, 32767};
+float sensorMax[9] = {4095, 4095, 4095, 4095, 4095, 32767, 32767, 32767, 32767};
 // giá trị đo min của cảm biến ở môi trường thực tế (cần test trước để hiệu chỉnh). hiện tại mới dùng 2 cái đầu tiên cho ánh sáng và độ ẩm đất
-float sensorMin[9] = {1460, 1210, 0, 0, 0, 0, 0, 0, 0};
+float sensorMin[9] = {0, 0, 0, 1754, 1734, 0, 0, 0, 0};
 
 
 // có 9 cảm biến là 5 chân ADC được chọn trên esp32 và 4 chân bổ sung từ ADS1115_WE.
@@ -90,6 +90,7 @@ void readSoilMoisture(int pin) {
     int adcValue = analogRead(arr_ADC[pin]);
     int value = map(adcValue, sensorMax[pin], sensorMin[pin], 0, 100);
     sensor[pin] = constrain(value, 0, 100);
+    Serial.println(adcValue);
 }
 
 void readSensor() {

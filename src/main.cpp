@@ -7,7 +7,7 @@
 
 
 int ADC[5] = {32, 33, 34, 35, 36}; // dùng làm input, 4 cái của ADS1115 nữa là 9. giao tiếp I2C
-int RL[10] = {2, 4, 5, 14, 17, 18, 19, 23, 27, 26}; // 9 cặp và chân ở vị trí số 9 RL[9] dành cho quạt
+int RL[10] = {14, 4, 5, 27, 17, 18, 19, 23, 2, 26}; // 9 cặp và chân ở vị trí số 9 RL[9] dành cho quạt
 
 unsigned long current_time;
 unsigned long time1=0;
@@ -51,12 +51,12 @@ void updateStatus() {
         }
 
         if (sensor[i] <= lower_limit[i]) {
-            if (i>2){ // chỉ với tự động tưới. relay máy bơm từ 3 đến 8
+            // if (i>2){ // chỉ với tự động tưới. relay máy bơm từ 3 đến 8
                 if (!count_status[i]){
-                count_status[i] = true;
-                status[i] = true;
-            }
-            }
+                    count_status[i] = true;
+                    status[i] = true;
+                }
+            // }
         } else if (sensor[i] >= upper_limit[i]) {
             status[i] = false; // Không tưới, chiếu sáng
         } else {
@@ -144,7 +144,7 @@ void loop() {
             connect_MQTT();
         }
     }
-    if (Timer(&time2,5000)){ // đọc, gửi, in giá trị cảm biến
+    if (Timer(&time2,1000)){ // đọc, gửi, in giá trị cảm biến
         readSensor();                
         for (int i = 0; i < 9; i++) {
             if (!isActive[i]){

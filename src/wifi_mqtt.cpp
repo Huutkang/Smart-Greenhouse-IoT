@@ -62,10 +62,10 @@ bool status[10] = {false, false, false, false, false, false, false, false, false
 bool mqtt_connected = false;
 
 int count_connect_wifi = 0;
-int lower_limit[9] = {60, 60, 60, 60, 60, 60, 60, 60, 60}; // 9 cảm biến tối đa  (5 + 4 ads1115)
-int upper_limit[9] = {90, 90, 90, 90, 90, 90, 90, 90, 90};
+int lower_limit[9] = {0, 0, 0, 60, 60, 60, 60, 60, 60}; // 9 cảm biến tối đa  (5 + 4 ads1115)
+int upper_limit[9] = {10, 10, 10, 90, 90, 90, 90, 90, 90};
 int maxTemperature = 40;
-int max_time[9] = {60, 60, 60, 60, 60, 60, 60, 60};
+int max_time[9] = {18000,18000, 18000, 600, 600, 600, 600, 600};
 
 int ssMin[9] = {-1, -1, -1, -1, -1, -1, -1, -1, -1}; // mảng đặt lại giá trị max, min cho cảm biến
 int ssMax[9] = {-1, -1, -1, -1, -1, -1, -1, -1, -1}; // chỉ dùng cho người lắp đặt sản phẩm, k dành cho người dùng phổ thông
