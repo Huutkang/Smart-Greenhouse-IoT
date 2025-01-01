@@ -153,7 +153,7 @@ Hệ thống được thiết kế với luồng thông tin như sau:
 - Hệ thống hoàn toàn không dùng delay, giúp tránh được lãng phí tài nguyền cpu, xử dụng tính năng hẹn giờ để chạy các hàm được lên lịch sẵn bằng hàm Timer tự phát triển.
 - Dễ dàng phát triển thêm mà không cần nạp lại code. hệ thống có 9 cặp input, output để dễ mở rộng, không cần nạp lại code sau khi đã triển khai sản phẩm, mà có thể code thêm ở máy chủ từ xa (máy chủ nhận thông tin input, xử lí, điều khiển thông qua lệnh) vì khi đã bán sản phẩm thì rất khó để đến tận nơi để nạp code.
 - Kết nối wifi thông minh. không nạp mật khẩu wifi vào phần mềm, vì khi thay đổi wifi hay di chuyển sang nơi khác hay khi người dùng mua mới thì rất bất tiện. thay vào đó sẽ có cơ chế kết nối thông minh. khi hệ thông k kết nối được với điểm wifi cũ (hoặc mới mua) hệ thống sẽ phát ra điểm truy cập wifi cho người dùng nhập thông tin wifi vào, sau đó sẽ kết nối wifi. người dùng sẽ có tối đa 5 phút để nhập mật khẩu wifi từ khi khởi động, nếu quá 5 phút, hệ thống sẽ ngừng phát wifi và cố gắng kết nối lại điểm wifi cũ. mục đính của phương pháp set timeout này là đề phòng khi mất điện, wifi và hệ thống này cùng được khởi động lại, và khi hệ thống chưa tìm được wifi thì sẽ phát wifi cho người dùng nhập vào (mãi mãi) khiến hệ thống k kết nối được wifi(trường hợp này k có tương tác của người dùng).
-- Có thể thay đổi các thông số cảm biến. set lại giá trị min, max của cảm biến để map sang giá trị %. min -> 0% max -> 100%. ví dụ cảm biến độ ẩm đất: cảm biến điện trở sẽ có dải tín hiệu ADC trả về rộng hơn so với điện rung.
+- Có thể thay đổi các thông số cảm biến. set lại giá trị min, max của cảm biến để map sang giá trị %. min -> 0% max -> 100%. ví dụ cảm biến độ ẩm đất: cảm biến điện trở sẽ có dải tín hiệu ADC trả về rộng hơn so với điện dung.
 
 ## Thông tin thêm
 - message giao tiếp được ghi trong file message
@@ -165,9 +165,9 @@ Hệ thống được thiết kế với luồng thông tin như sau:
 - Tích hợp thêm các tính năng giám sát và điều khiển từ xa qua ứng dụng di động.
 
 ## Kết luận
-Sau quá trình nghiên cứu và phát triển, dự án hệ thống nhà kính thông minh dựa trên công nghệ IoT đã hoàn thành với nhiều tính năng đáp ứng được yêu cầu ban đầu. Hệ thống cho thấy khả năng tự động hóa các quy trình kiểm soát môi trường như chiếu sáng, tưới nước, và làm mát, đồng thời cung cấp một giao diện trực quan để người dùng có thể dễ dàng theo dõi và điều khiển từ xa.
+- Sau quá trình nghiên cứu và phát triển, dự án hệ thống nhà kính thông minh dựa trên công nghệ IoT đã hoàn thành với nhiều tính năng đáp ứng được yêu cầu ban đầu. Hệ thống cho thấy khả năng tự động hóa các quy trình kiểm soát môi trường như chiếu sáng, tưới nước, và làm mát, đồng thời cung cấp một giao diện trực quan để người dùng có thể dễ dàng theo dõi và điều khiển từ xa.
 
-Việc triển khai các công nghệ như ESP32, giao thức MQTT, và Node-RED không chỉ giúp tối ưu hóa nguồn tài nguyên mà còn tạo nền tảng cho những ứng dụng IoT tiên tiến hơn trong tương lai.
+- Việc triển khai các công nghệ như ESP32, giao thức MQTT, và Node-RED không chỉ giúp tối ưu hóa nguồn tài nguyên mà còn tạo nền tảng cho những ứng dụng IoT tiên tiến hơn trong tương lai.
 
-Dự án không chỉ giúp tiết kiệm thời gian và công sức trong quản lý nhà kính mà còn mở ra tiềm năng mở rộng, tích hợp thêm nhiều tính năng và cảm biến khác. Những kết quả đạt được khẳng định tầm quan trọng và hiệu quả của việc áp dụng công nghệ IoT vào lĩnh vực nông nghiệp thông minh.
+- Dự án không chỉ giúp tiết kiệm thời gian và công sức trong quản lý nhà kính mà còn mở ra tiềm năng mở rộng, tích hợp thêm nhiều tính năng và cảm biến khác. Những kết quả đạt được khẳng định tầm quan trọng và hiệu quả của việc áp dụng công nghệ IoT vào lĩnh vực nông nghiệp thông minh.
 ---
