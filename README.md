@@ -95,7 +95,7 @@ Hệ thống được thiết kế với luồng thông tin như sau:
 - Điều chỉnh ánh sáng dựa trên cảm biến đo độ sáng (giá trị ADC chuyển đổi sang % từ 0 đến 100).
   1. **Tự động**: 
     - Với các cây trồng cần chiếu sáng theo lịch, hệ thống tuân thủ các giá trị **min** và **max** như sau:
-      - Bật đèn theo lịch khi độ sáng  từ 0 đến max (tính theo thang đo %. với max là giá trị lớn nhất đo được ngoài môi trường).
+      - Bật đèn theo lịch khi độ sáng  từ 0 đến max (tính theo thang đo %. với 100% là giá trị lớn nhất đo được ngoài môi trường).
       - Tắt đèn khi độ sáng vượt ngưỡng **max**.
   2. **Điều khiển bằng tay**:
         - Người dùng bật relay thủ công, thì phải tự tắt đi, hoặc chuyển sang chế độ auto để hệ thống tự động.
